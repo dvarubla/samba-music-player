@@ -12,9 +12,9 @@ import android.view.ViewGroup;
 import com.dvarubla.sambamusicplayer.R;
 
 public class LocationsFixedFragment extends Fragment {
-    private ILocationsFixedCtrl _ctrl;
+    private LocationsFixedCtrl _ctrl;
 
-    public void setCtrl(ILocationsFixedCtrl ctrl){
+    public void setCtrl(LocationsFixedCtrl ctrl){
         _ctrl = ctrl;
     }
 

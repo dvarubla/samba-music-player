@@ -3,8 +3,6 @@ package com.dvarubla.sambamusicplayer.locations;
 import android.support.v7.widget.RecyclerView;
 
 import io.reactivex.Observable;
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
 
 public class LocationsFixedCtrl implements ILocationsFixedCtrl {
     private LocationsFixedAdapter _adapter;
@@ -12,7 +10,6 @@ public class LocationsFixedCtrl implements ILocationsFixedCtrl {
         _adapter = new LocationsFixedAdapter(names);
     }
 
-    @Override
     public void onCreated(RecyclerView v){
         //noinspection ConstantConditions
         initRecyclerView(v);

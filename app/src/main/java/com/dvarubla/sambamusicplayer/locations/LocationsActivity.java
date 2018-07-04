@@ -67,10 +67,10 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
             _locComp.inject(this);
             if(_presenter.isEditPressed()) {
                 _locEdFragment = (LocationsEditableFragment) getSupportFragmentManager().findFragmentByTag("edit_loc");
-                _locEdFragment.setCtrl(_presenter.getLocEdComp());
+                _locEdFragment.setCtrl(_locComp.getEditableCtrl());
             }
             _locFixedFragment = (LocationsFixedFragment) getSupportFragmentManager().findFragmentByTag("fixed_loc");
-            _locFixedFragment.setCtrl(_presenter.getLocFixComp());
+            _locFixedFragment.setCtrl(_locComp.getFixedCtrl());
         } else {
             _locComp = DaggerLocationsComponent.builder().settingsComponent(Application.getSettingsComp()).build();
             _locComp.inject(this);

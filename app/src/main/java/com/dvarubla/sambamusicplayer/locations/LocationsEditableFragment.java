@@ -12,9 +12,9 @@ import android.view.ViewGroup;
 import com.dvarubla.sambamusicplayer.R;
 
 public class LocationsEditableFragment extends Fragment {
-    private ILocationsEditableCtrl _ctrl;
+    private LocationsEditableCtrl _ctrl;
 
-    public void setCtrl(ILocationsEditableCtrl ctrl){
+    public void setCtrl(LocationsEditableCtrl ctrl){
         _ctrl = ctrl;
     }
 

@@ -36,6 +36,7 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
             _lastId++;
             _dataset.add(new StringAndId(_lastId, str));
         }
+        notifyDataSetChanged();
     }
 
     class StringAndId{

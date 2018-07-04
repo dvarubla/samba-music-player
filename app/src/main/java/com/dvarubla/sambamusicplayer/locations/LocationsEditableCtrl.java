@@ -10,7 +10,6 @@ public class LocationsEditableCtrl implements ILocationsEditableCtrl {
         _adapter = new LocationsEditableAdapter();
     }
 
-    @Override
     public void onCreated(RecyclerView v){
         //noinspection ConstantConditions
         initRecyclerView(v);

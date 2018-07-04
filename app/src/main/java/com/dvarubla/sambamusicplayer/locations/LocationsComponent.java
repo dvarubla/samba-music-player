@@ -9,5 +9,7 @@ import dagger.Component;
 public interface LocationsComponent {
     LocationsEditableFragment getEditableFragment();
     LocationsFixedFragment getFixedFragment();
+    LocationsFixedCtrl getFixedCtrl();
+    LocationsEditableCtrl getEditableCtrl();
     void inject(LocationsActivity activity);
 }

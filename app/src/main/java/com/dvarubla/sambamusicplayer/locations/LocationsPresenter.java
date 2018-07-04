@@ -29,16 +29,6 @@ public class LocationsPresenter implements ILocationsPresenter {
     }
 
     @Override
-    public ILocationsFixedCtrl getLocFixComp() {
-        return _fixedLocComponent;
-    }
-
-    @Override
-    public ILocationsEditableCtrl getLocEdComp() {
-        return _edLocComponent.get();
-    }
-
-    @Override
     public boolean isEditPressed() {
         return _isEditPressed;
     }
