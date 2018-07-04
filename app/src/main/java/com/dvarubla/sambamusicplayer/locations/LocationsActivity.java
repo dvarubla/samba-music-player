@@ -20,6 +20,8 @@ import javax.inject.Inject;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 
+import static com.dvarubla.sambamusicplayer.Common.LOCATION_NAME;
+
 public class LocationsActivity extends AppCompatActivity implements ILocationsView{
     @Inject
     ILocationsPresenter _presenter;
@@ -148,7 +150,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     @Override
     public void showFileList(String str) {
         Intent intent = new Intent(this, FileListActivity.class);
-        intent.putExtra("location", str);
+        intent.putExtra(LOCATION_NAME, str);
         startActivity(intent);
     }
 
