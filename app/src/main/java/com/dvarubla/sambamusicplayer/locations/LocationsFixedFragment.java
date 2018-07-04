@@ -31,7 +31,6 @@ public class LocationsFixedFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        _ctrl.onDetach();
         //noinspection ConstantConditions
         ((RecyclerView) getView()).setAdapter(null);
         super.onDestroyView();

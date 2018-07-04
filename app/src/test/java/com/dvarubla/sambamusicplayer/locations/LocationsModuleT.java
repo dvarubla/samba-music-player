@@ -2,11 +2,18 @@ package com.dvarubla.sambamusicplayer.locations;
 
 import org.mockito.Mockito;
 
+import javax.inject.Named;
+
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.subjects.PublishSubject;
+
+import static org.mockito.Mockito.when;
 
 @Module
 public class LocationsModuleT{
+    private static PublishSubject<String> _clickedSubj = PublishSubject.create();
+
     @LocationsScope
     @Provides
     static ILocationsEditableCtrl getLocEdComp(){
@@ -15,6 +22,13 @@ public class LocationsModuleT{
 
     @LocationsScope
     @Provides static ILocationsFixedCtrl getLocFixComp(){
-        return Mockito.mock(ILocationsFixedCtrl.class);
+        ILocationsFixedCtrl ctrl = Mockito.mock(ILocationsFixedCtrl.class);
+        when(ctrl.locationClicked()).thenReturn(_clickedSubj);
+        return ctrl;
+    }
+
+    @LocationsScope
+    @Provides @Named("LocationsFixedClickSubj") static PublishSubject<String> getLocFixSubj(){
+        return _clickedSubj;
     }
 }

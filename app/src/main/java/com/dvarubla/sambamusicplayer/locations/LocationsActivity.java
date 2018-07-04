@@ -1,5 +1,6 @@
 package com.dvarubla.sambamusicplayer.locations;
 
+import android.content.Intent;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -9,8 +10,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.dvarubla.sambamusicplayer.Application;
 import com.dvarubla.sambamusicplayer.ItemSingleton;
 import com.dvarubla.sambamusicplayer.R;
+import com.dvarubla.sambamusicplayer.filelist.FileListActivity;
 
 import javax.inject.Inject;
 
@@ -33,9 +36,6 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_locations);
-        _editClickedSubj = PublishSubject.create();
-        _backClickedSubj = PublishSubject.create();
-        _saveClickedSubj = PublishSubject.create();
     }
 
     @Override
@@ -58,6 +58,9 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     @Override
     public void onStart() {
         _needSave = false;
+        _editClickedSubj = PublishSubject.create();
+        _backClickedSubj = PublishSubject.create();
+        _saveClickedSubj = PublishSubject.create();
         ItemSingleton<LocationsComponent> s = ItemSingleton.getInstance(LocationsComponent.class);
         if(s.hasItem()){
             _locComp = s.getItem();
@@ -69,7 +72,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
             _locFixedFragment = (LocationsFixedFragment) getSupportFragmentManager().findFragmentByTag("fixed_loc");
             _locFixedFragment.setCtrl(_presenter.getLocFixComp());
         } else {
-            _locComp = DaggerLocationsComponent.builder().build();
+            _locComp = DaggerLocationsComponent.builder().settingsComponent(Application.getSettingsComp()).build();
             _locComp.inject(this);
             _locFixedFragment = _locComp.getFixedFragment();
 
@@ -85,6 +88,9 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     @Override
     public void onStop(){
         super.onStop();
+        _editClickedSubj.onComplete();
+        _backClickedSubj.onComplete();
+        _saveClickedSubj.onComplete();
         if(!_needSave){
             ItemSingleton.getInstance(LocationsComponent.class).removeItem();
         }
@@ -137,6 +143,13 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     @Override
     public Observable<Object> backClicked() {
         return _backClickedSubj;
+    }
+
+    @Override
+    public void showFileList(String str) {
+        Intent intent = new Intent(this, FileListActivity.class);
+        intent.putExtra("location", str);
+        startActivity(intent);
     }
 
     private void goBack() {

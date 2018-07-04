@@ -7,5 +7,6 @@ interface ILocationsView {
     Observable<Object> editClicked();
     Observable<Object> saveClicked();
     Observable<Object> backClicked();
+    void showFileList(String str);
     void showSettingsSaved();
 }

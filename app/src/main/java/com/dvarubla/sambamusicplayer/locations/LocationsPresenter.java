@@ -5,18 +5,27 @@ import android.annotation.SuppressLint;
 import javax.inject.Inject;
 
 import dagger.Lazy;
+import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.subjects.PublishSubject;
 
 public class LocationsPresenter implements ILocationsPresenter {
     @Inject
     Lazy<ILocationsEditableCtrl> _edLocComponent;
-    @Inject
-    ILocationsFixedCtrl _fixedLocComponent;
+    private ILocationsFixedCtrl _fixedLocComponent;
     private boolean _isEditPressed;
     private ILocationsView _view;
 
+    @SuppressLint("CheckResult")
     @Inject
-    LocationsPresenter(){
+    LocationsPresenter(ILocationsFixedCtrl fixedLocComponent){
+        _fixedLocComponent = fixedLocComponent;
+        _fixedLocComponent.locationClicked().subscribe(new Consumer<String>() {
+            @Override
+            public void accept(String s) {
+                _view.showFileList(s);
+            }
+        });
     }
 
     @Override
