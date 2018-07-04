@@ -24,7 +24,7 @@ public class LocationsViewMockHelper {
         return _view;
     }
 
-    public PublishSubject<Object> getOnEditObj() {
+    public PublishSubject<Object> getOnEditSubj() {
         return _onEditObj;
     }
 
@@ -32,7 +32,7 @@ public class LocationsViewMockHelper {
         return _onBackSubj;
     }
 
-    public PublishSubject<Object> getOnSaveObj() {
+    public PublishSubject<Object> getOnSaveSubj() {
         return _onSaveObj;
     }
 }
