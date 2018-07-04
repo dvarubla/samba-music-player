@@ -2,16 +2,18 @@ package com.dvarubla.sambamusicplayer.locations;
 
 import android.annotation.SuppressLint;
 
+import com.dvarubla.sambamusicplayer.settings.ISettings;
+
 import javax.inject.Inject;
 
 import dagger.Lazy;
-import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
-import io.reactivex.subjects.PublishSubject;
 
 public class LocationsPresenter implements ILocationsPresenter {
     @Inject
     Lazy<ILocationsEditableCtrl> _edLocComponent;
+    @Inject
+    ISettings _settings;
     private ILocationsFixedCtrl _fixedLocComponent;
     private boolean _isEditPressed;
     private ILocationsView _view;
@@ -57,7 +59,9 @@ public class LocationsPresenter implements ILocationsPresenter {
         _view.saveClicked().subscribe(new Consumer<Object>() {
             @Override
             public void accept(Object o) {
-                _fixedLocComponent.setStrings(_edLocComponent.get().getStrings());
+                String [] locations = _edLocComponent.get().getStrings();
+                _fixedLocComponent.setStrings(locations);
+                _settings.saveLocations(locations);
                 _view.showSettingsSaved();
             }
         });

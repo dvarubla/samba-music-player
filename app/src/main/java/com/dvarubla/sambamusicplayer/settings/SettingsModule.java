@@ -1,5 +1,7 @@
 package com.dvarubla.sambamusicplayer.settings;
 
+import android.content.Context;
+
 import dagger.Module;
 import dagger.Provides;
 
@@ -7,7 +9,7 @@ import dagger.Provides;
 class SettingsModule {
     @SettingsScope
     @Provides
-    ISettings getSettings(){
-        return new Settings();
+    ISettings getSettings(Context context){
+        return new Settings(context);
     }
 }

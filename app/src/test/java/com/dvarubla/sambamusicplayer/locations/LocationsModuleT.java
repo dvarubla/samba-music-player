@@ -1,5 +1,7 @@
 package com.dvarubla.sambamusicplayer.locations;
 
+import com.dvarubla.sambamusicplayer.settings.ISettings;
+
 import org.mockito.Mockito;
 
 import javax.inject.Named;
@@ -13,6 +15,12 @@ import static org.mockito.Mockito.when;
 @Module
 public class LocationsModuleT{
     private static PublishSubject<String> _clickedSubj = PublishSubject.create();
+
+    @LocationsScope
+    @Provides
+    static ISettings getSettings(){
+        return Mockito.mock(ISettings.class);
+    }
 
     @LocationsScope
     @Provides

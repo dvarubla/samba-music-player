@@ -1,5 +1,7 @@
 package com.dvarubla.sambamusicplayer.locations;
 
+import com.dvarubla.sambamusicplayer.settings.ISettings;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,6 +22,9 @@ public class LocationsPresenterEditT {
 
     @Inject
     ILocationsFixedCtrl _fixedCtrl;
+
+    @Inject
+    ISettings _settings;
 
     private LocationsViewMockHelper _viewMockH = new LocationsViewMockHelper();
 
@@ -56,6 +61,7 @@ public class LocationsPresenterEditT {
         _viewMockH.getOnSaveSubj().onNext(new Object());
         verify(_fixedCtrl, times(1)).setStrings(testLocsEd);
         verify(_viewMockH.getView(), times(1)).showSettingsSaved();
+        verify(_settings, times(1)).saveLocations(testLocsEd);
     }
 
     @Test
