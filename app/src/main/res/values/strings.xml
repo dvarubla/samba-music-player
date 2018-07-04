@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Samba Music Player</string>
+    <string name="settings_saved">Settings were saved</string>
+</resources>
