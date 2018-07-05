@@ -21,7 +21,7 @@ public class Settings implements ISettings {
     public String[] getLocations() {
         String str = _prefs.getString(LOCATIONS_NAME, null);
         if(str == null){
-            return new String[]{""};
+            return new String[0];
         } else {
             return _gson.fromJson(str, String[].class);
         }
