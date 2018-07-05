@@ -195,7 +195,12 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
             if ( v instanceof EditText) {
                 Rect outRect = new Rect();
                 v.getGlobalVisibleRect(outRect);
-                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                Rect rootRect = new Rect();
+                findViewById(R.id.locations_layout).getGlobalVisibleRect(rootRect);
+                if (
+                        !outRect.contains((int)event.getRawX(), (int)event.getRawY()) &&
+                        rootRect.contains((int)event.getRawX(), (int)event.getRawY())
+                ) {
                     v.clearFocus();
                 }
             }
