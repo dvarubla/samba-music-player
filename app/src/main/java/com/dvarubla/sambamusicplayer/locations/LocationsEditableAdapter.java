@@ -3,14 +3,23 @@ package com.dvarubla.sambamusicplayer.locations;
 import android.annotation.SuppressLint;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.dvarubla.sambamusicplayer.R;
 import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemConstants;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAction;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultActionDefault;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultActionRemoveItem;
+import com.h6ah4i.android.widget.advrecyclerview.swipeable.annotation.SwipeableItemResults;
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemViewHolder;
+import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableSwipeableItemViewHolder;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import java.util.ArrayList;
@@ -19,7 +28,10 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
 
-public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEditableAdapter.ViewHolder> implements DraggableItemAdapter<LocationsEditableAdapter.ViewHolder> {
+public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEditableAdapter.ViewHolder>
+        implements DraggableItemAdapter<LocationsEditableAdapter.ViewHolder>,
+        SwipeableItemAdapter<LocationsEditableAdapter.ViewHolder> {
+
     public String[] getStrings() {
         String arr[] = new String[_dataset.size()];
         int i = 0;
@@ -39,6 +51,12 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
         notifyDataSetChanged();
     }
 
+    public void addNewString(String location) {
+        _lastId++;
+        _dataset.add(new StringAndId(_lastId, location));
+        notifyDataSetChanged();
+    }
+
     class StringAndId{
         final long id;
         String text;
@@ -49,11 +67,22 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
         }
     }
 
-    static class ViewHolder extends AbstractDraggableItemViewHolder {
+    static class ViewHolder extends AbstractDraggableSwipeableItemViewHolder {
         LinearLayout item;
+        LinearLayout container;
+        EditText edit;
+        ImageView dragHanlde;
         ViewHolder(LinearLayout v) {
             super(v);
             item = v;
+            container = v.findViewById(R.id.location_edit_item_wrap);
+            dragHanlde = v.findViewById(R.id.location_drag_handle);
+            edit = v.findViewById(R.id.location_edit_text);
+        }
+
+        @Override
+        public View getSwipeableContainerView() {
+            return container;
         }
     }
 
@@ -61,10 +90,26 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
     private ArrayList<StringAndId> _dataset;
     private int _lastId;
 
+    private boolean hitTest(View v, int x, int y) {
+        final int tx = (int) (v.getTranslationX() + 0.5f);
+        final int ty = (int) (v.getTranslationY() + 0.5f);
+        final int left = v.getLeft() + tx;
+        final int right = v.getRight() + tx;
+        final int top = v.getTop() + ty;
+        final int bottom = v.getBottom() + ty;
+
+        return (x >= left) && (x <= right) && (y >= top) && (y <= bottom);
+    }
 
     @Override
     public boolean onCheckCanStartDrag(ViewHolder holder, int position, int x, int y) {
-        return true;
+        View containerView = holder.container;
+        View dragHandleView = holder.dragHanlde;
+
+        int offsetX = containerView.getLeft() + (int) (containerView.getTranslationX() + 0.5f);
+        int offsetY = containerView.getTop() + (int) (containerView.getTranslationY() + 0.5f);
+
+        return hitTest(dragHandleView, x - offsetX, y - offsetY);
     }
 
     @Override
@@ -111,9 +156,8 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
                                                                   int viewType) {
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.editable_location_item, parent, false);
-        EditText ed = v.findViewById(R.id.location_edit_text);
         final ViewHolder holder= new ViewHolder(v);
-        RxTextView.textChanges(ed).skipInitialValue().map(new Function<CharSequence, StringAndId>() {
+        RxTextView.textChanges(holder.edit).skipInitialValue().map(new Function<CharSequence, StringAndId>() {
             @Override
             public StringAndId apply(CharSequence charSequence){
                 return new StringAndId(holder.getAdapterPosition(), charSequence.toString());
@@ -125,9 +169,7 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         String text = _dataset.get(position).text;
-        EditText ed = holder.item.findViewById(R.id.location_edit_text);
-        ed.setText(text);
-        ed.clearFocus();
+        holder.edit.setText(text);
     }
 
     @Override
@@ -138,5 +180,48 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
     @Override
     public long getItemId(int position) {
         return _dataset.get(position).id;
+    }
+
+    static class RemoveAction extends SwipeResultActionRemoveItem {
+        private LocationsEditableAdapter _adapter;
+        private int _position;
+
+        RemoveAction(LocationsEditableAdapter adapter, int position) {
+            this._adapter = adapter;
+            this._position = position;
+        }
+
+        @Override
+        protected void onPerformAction() {
+            _adapter._dataset.remove(_position);
+            _adapter.notifyItemRemoved(_position);
+        }
+    }
+
+    @Override
+    public int onGetSwipeReactionType(ViewHolder holder, int position, int x, int y) {
+        if(holder.edit.isFocused()){
+            return SwipeableItemConstants.REACTION_CAN_NOT_SWIPE_ANY;
+        }
+        return SwipeableItemConstants.REACTION_CAN_SWIPE_LEFT;
+    }
+
+    @Override
+    public void onSwipeItemStarted(ViewHolder holder, int position) {
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void onSetSwipeBackground(ViewHolder holder, int position, int type) {
+
+    }
+
+    @Override
+    public SwipeResultAction onSwipeItem(ViewHolder holder, int position, @SwipeableItemResults int result) {
+        if (result == SwipeableItemConstants.RESULT_CANCELED) {
+            return new SwipeResultActionDefault();
+        } else {
+            return new RemoveAction(this, position);
+        }
     }
 }

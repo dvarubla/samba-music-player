@@ -8,6 +8,7 @@ import org.junit.Test;
 import javax.inject.Inject;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -79,5 +80,17 @@ public class LocationsPresenterEditT {
         when(_edCtrl.getStrings()).thenReturn(testLocsEd);
         _viewMockH.getOnBackSubj().onNext(new Object());
         verify(_fixedCtrl, never()).setStrings(any(String[].class));
+    }
+
+    @Test
+    public void tAdd(){
+        String[] testLocs = {
+                "a",
+                "b"
+        };
+        when(_fixedCtrl.getStrings()).thenReturn(testLocs);
+        _viewMockH.getOnEditSubj().onNext(new Object());
+        _viewMockH.getOnAddSubj().onNext(new Object());
+        verify(_edCtrl, times(1)).addNewString(anyString());
     }
 }

@@ -1,6 +1,9 @@
 package com.dvarubla.sambamusicplayer.locations;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Rect;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -8,16 +11,22 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.dvarubla.sambamusicplayer.Application;
 import com.dvarubla.sambamusicplayer.ItemSingleton;
 import com.dvarubla.sambamusicplayer.R;
 import com.dvarubla.sambamusicplayer.filelist.FileListActivity;
+import com.jakewharton.rxbinding2.view.RxView;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
+import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
 
 import static com.dvarubla.sambamusicplayer.Common.LOCATION_NAME;
@@ -33,6 +42,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     private PublishSubject<Object> _editClickedSubj;
     private PublishSubject<Object> _saveClickedSubj;
     private PublishSubject<Object> _backClickedSubj;
+    private PublishSubject<Object> _addClickedSubj;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,9 +54,12 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         if(_presenter.isEditPressed()) {
+            setTitle(R.string.edit);
+            inflater.inflate(R.menu.add_button, menu);
             inflater.inflate(R.menu.save_button, menu);
         } else {
             inflater.inflate(R.menu.edit_button, menu);
+            setTitle(R.string.locations);
         }
         return true;
     }
@@ -63,6 +76,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
         _editClickedSubj = PublishSubject.create();
         _backClickedSubj = PublishSubject.create();
         _saveClickedSubj = PublishSubject.create();
+        _addClickedSubj = PublishSubject.create();
         ItemSingleton<LocationsComponent> s = ItemSingleton.getInstance(LocationsComponent.class);
         if(s.hasItem()){
             _locComp = s.getItem();
@@ -93,6 +107,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
         _editClickedSubj.onComplete();
         _backClickedSubj.onComplete();
         _saveClickedSubj.onComplete();
+        _addClickedSubj.onComplete();
         if(!_needSave){
             ItemSingleton.getInstance(LocationsComponent.class).removeItem();
         }
@@ -106,6 +121,9 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
                 break;
             case R.id.save_locations:
                 _saveClickedSubj.onNext(new Object());
+                break;
+            case R.id.add_location:
+                _addClickedSubj.onNext(new Object());
                 break;
         }
         return true;
@@ -148,6 +166,11 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     }
 
     @Override
+    public Observable<Object> addClicked() {
+        return _addClickedSubj;
+    }
+
+    @Override
     public void showFileList(String str) {
         Intent intent = new Intent(this, FileListActivity.class);
         intent.putExtra(LOCATION_NAME, str);
@@ -163,5 +186,20 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     @Override
     public void showSettingsSaved() {
         Toast.makeText(this, R.string.settings_saved, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if ( v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                    v.clearFocus();
+                }
+            }
+        }
+        return super.dispatchTouchEvent( event );
     }
 }

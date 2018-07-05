@@ -65,5 +65,12 @@ public class LocationsPresenter implements ILocationsPresenter {
                 _view.showSettingsSaved();
             }
         });
+
+        _view.addClicked().subscribe(new Consumer<Object>() {
+            @Override
+            public void accept(Object o) {
+                _edLocComponent.get().addNewString("");
+            }
+        });
     }
 }

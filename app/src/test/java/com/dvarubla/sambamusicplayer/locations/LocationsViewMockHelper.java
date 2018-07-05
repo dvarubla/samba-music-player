@@ -9,15 +9,17 @@ import static org.mockito.Mockito.when;
 public class LocationsViewMockHelper {
     private ILocationsView _view;
     private PublishSubject<Object>
-            _onEditObj = PublishSubject.create(),
+            _onEditSubj = PublishSubject.create(),
             _onBackSubj = PublishSubject.create(),
-            _onSaveObj = PublishSubject.create()
+            _onSaveSubj = PublishSubject.create(),
+            _onAddSubj = PublishSubject.create()
     ;
     LocationsViewMockHelper(){
         _view = Mockito.mock(ILocationsView.class);
-        when(_view.saveClicked()).thenReturn(_onSaveObj);
+        when(_view.saveClicked()).thenReturn(_onSaveSubj);
         when(_view.backClicked()).thenReturn(_onBackSubj);
-        when(_view.editClicked()).thenReturn(_onEditObj);
+        when(_view.editClicked()).thenReturn(_onEditSubj);
+        when(_view.addClicked()).thenReturn(_onAddSubj);
     }
 
     public ILocationsView getView() {
@@ -25,7 +27,7 @@ public class LocationsViewMockHelper {
     }
 
     public PublishSubject<Object> getOnEditSubj() {
-        return _onEditObj;
+        return _onEditSubj;
     }
 
     public PublishSubject<Object> getOnBackSubj() {
@@ -33,6 +35,10 @@ public class LocationsViewMockHelper {
     }
 
     public PublishSubject<Object> getOnSaveSubj() {
-        return _onSaveObj;
+        return _onSaveSubj;
+    }
+
+    public PublishSubject<Object> getOnAddSubj() {
+        return _onAddSubj;
     }
 }
