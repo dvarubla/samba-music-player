@@ -7,10 +7,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.dvarubla.sambamusicplayer.R;
+import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
 
 public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHolder> {
-    public void setStrings(String[] strings) {
-        _dataset = strings.clone();
+    public void setItems(IFileOrFolderItem[] items) {
+        _dataset = items.clone();
         notifyDataSetChanged();
     }
 
@@ -22,10 +23,10 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
         }
     }
 
-    private String [] _dataset;
+    private IFileOrFolderItem [] _dataset;
 
     FileListAdapter(){
-        _dataset = new String[0];
+        _dataset = new IFileOrFolderItem[0];
     }
 
     @Override
@@ -37,7 +38,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        ((TextView) holder.item.findViewById(R.id.file_or_dir_name)).setText(_dataset[position]);
+        ((TextView) holder.item.findViewById(R.id.file_or_dir_name)).setText(_dataset[position].getName());
     }
 
     @Override

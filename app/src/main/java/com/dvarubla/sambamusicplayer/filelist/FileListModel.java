@@ -1,5 +1,6 @@
 package com.dvarubla.sambamusicplayer.filelist;
 
+import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
 import com.dvarubla.sambamusicplayer.smbutils.ISmbUtils;
 import com.dvarubla.sambamusicplayer.smbutils.LocationData;
 import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
@@ -20,7 +21,7 @@ public class FileListModel implements IFileListModel {
     }
 
     @Override
-    public Maybe<String[]> getFiles(final LocationData location) {
+    public Maybe<IFileOrFolderItem[]> getFiles(final LocationData location) {
         return Maybe.just(new Object()).
                 flatMap(o -> _smbUtils.connectToServer(location.getServer(), _lp)).
                 flatMap(o -> _smbUtils.getFilesFromShare(location.getShare(), location.getPath()).toMaybe());

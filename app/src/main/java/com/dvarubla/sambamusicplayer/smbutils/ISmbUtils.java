@@ -5,5 +5,5 @@ import io.reactivex.Single;
 
 public interface ISmbUtils {
     Maybe<Object> connectToServer(String serverName, LoginPass loginPass);
-    Single<String[]> getFilesFromShare(String shareName, String path);
+    Single<IFileOrFolderItem[]> getFilesFromShare(String shareName, String path);
 }

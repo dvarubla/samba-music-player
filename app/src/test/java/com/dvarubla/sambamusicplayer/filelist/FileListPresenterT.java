@@ -1,8 +1,11 @@
 package com.dvarubla.sambamusicplayer.filelist;
 
+import com.dvarubla.sambamusicplayer.smbutils.FileItem;
+import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
 import com.dvarubla.sambamusicplayer.smbutils.LocationData;
 import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -10,9 +13,11 @@ import org.mockito.InOrder;
 import javax.inject.Inject;
 
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -47,32 +52,44 @@ public class FileListPresenterT {
     public void testSuccess(){
         LoginPass lp = new LoginPass("e", "f");
         when(_view.showLoginPassDialog(anyString())).thenReturn(Maybe.just(lp));
-        String [] strs = {
-                "a" , "b", "c"
+        IFileOrFolderItem[] items = {
+                new FileItem("a") , new FileItem("b"), new FileItem("c")
         };
-        when(_model.getFiles(any(LocationData.class))).thenReturn(Maybe.just(strs));
+        when(_model.getFiles(any(LocationData.class))).thenReturn(Maybe.just(items));
+        doAnswer(invocation -> {
+            Assert.assertArrayEquals(
+                    items,
+                    ((Observable<IFileOrFolderItem[]>)invocation.getArgument(0)).test().values().get(0)
+            );
+            return null;
+        }).when(_fileListCtrl).setItemsObs(any());
         prepare();
-        verify(_fileListCtrl, times(1)).setItems(strs);
     }
 
     @Test
     public void test1Retry(){
         LoginPass lp = new LoginPass("e", "f");
         when(_view.showLoginPassDialog(anyString())).thenReturn(Maybe.just(lp));
-        final String [] strs = {
-                "a" , "b", "c"
+        IFileOrFolderItem[] items = {
+                new FileItem("a") , new FileItem("b"), new FileItem("c")
         };
         when(_model.getFiles(any(LocationData.class))).thenReturn(Maybe.create(emitter -> {
             if(i == 1){
-                emitter.onSuccess(strs);
+                emitter.onSuccess(items);
             } else {
                 emitter.onComplete();
             }
             i++;
         }));
+        doAnswer(invocation -> {
+            Assert.assertArrayEquals(
+                    items,
+                    ((Observable<IFileOrFolderItem[]>)invocation.getArgument(0)).test().values().get(0)
+            );
+            return null;
+        }).when(_fileListCtrl).setItemsObs(any());
         prepare();
         verify(_model, times(1)).setLoginPassForServer("TEST", lp);
-        verify(_fileListCtrl, times(1)).setItems(strs);
     }
 
     @Test
@@ -86,21 +103,27 @@ public class FileListPresenterT {
                 emitter.onSuccess(lp2);
             }
         }));
-        final String [] strs = {
-                "a" , "b", "c"
+        IFileOrFolderItem[] items = {
+                new FileItem("a") , new FileItem("b"), new FileItem("c")
         };
         when(_model.getFiles(any(LocationData.class))).thenReturn(Maybe.create(emitter -> {
             if(i == 3){
-                emitter.onSuccess(strs);
+                emitter.onSuccess(items);
             } else {
                 emitter.onComplete();
             }
             i++;
         }));
+        doAnswer(invocation -> {
+            Assert.assertArrayEquals(
+                    items,
+                    ((Observable<IFileOrFolderItem[]>)invocation.getArgument(0)).test().values().get(0)
+            );
+            return null;
+        }).when(_fileListCtrl).setItemsObs(any());
         prepare();
         InOrder inOrder = inOrder(_model);
         inOrder.verify(_model).setLoginPassForServer("TEST", lp);
         inOrder.verify(_model, times(2)).setLoginPassForServer("TEST", lp2);
-        verify(_fileListCtrl, times(1)).setItems(strs);
     }
 }
