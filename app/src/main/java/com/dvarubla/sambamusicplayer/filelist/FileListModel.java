@@ -21,7 +21,8 @@ public class FileListModel implements IFileListModel {
 
     @Override
     public Maybe<String[]> getFiles(final LocationData location) {
-        return _smbUtils.connectToServer(location.getServer(), new LoginPass(_lp.getLogin(), _lp.getPass())).
+        return Maybe.just(new Object()).
+                flatMap(o -> _smbUtils.connectToServer(location.getServer(), _lp)).
                 flatMap(o -> _smbUtils.getFilesFromShare(location.getShare(), location.getPath()).toMaybe());
     }
 
