@@ -1,9 +1,7 @@
 package com.dvarubla.sambamusicplayer.locations;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -13,7 +11,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -21,12 +18,10 @@ import com.dvarubla.sambamusicplayer.Application;
 import com.dvarubla.sambamusicplayer.ItemSingleton;
 import com.dvarubla.sambamusicplayer.R;
 import com.dvarubla.sambamusicplayer.filelist.FileListActivity;
-import com.jakewharton.rxbinding2.view.RxView;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
-import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
 
 import static com.dvarubla.sambamusicplayer.Common.LOCATION_NAME;

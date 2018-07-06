@@ -6,13 +6,10 @@ import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 import javax.inject.Inject;
 
 import io.reactivex.Maybe;
-import io.reactivex.MaybeEmitter;
 import io.reactivex.MaybeObserver;
 import io.reactivex.MaybeOnSubscribe;
-import io.reactivex.MaybeSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
 
 public class FileListPresenter implements IFileListPresenter {
     private IFileListCtrl _fileListCtrl;
@@ -30,35 +27,26 @@ public class FileListPresenter implements IFileListPresenter {
     }
 
     @Override
-    public void setView(final IFileListView view) {
-        getFiles().switchIfEmpty(Maybe.create(new MaybeOnSubscribe<Maybe<String[]>>() {
+    public void setView(final IFileListView view) {getFiles().switchIfEmpty(
+                Maybe.create((MaybeOnSubscribe<Maybe<String[]>>) emitter -> view.showLoginPassDialog(_locationData.getServer()).
+                subscribe(new MaybeObserver<LoginPass>() {
             @Override
-            public void subscribe(final MaybeEmitter<Maybe<String[]>> emitter) {
-                view.showLoginPassDialog(_locationData.getServer()).subscribe(new MaybeObserver<LoginPass>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {}
+            public void onSubscribe(Disposable d) {}
 
-                    @Override
-                    public void onSuccess(LoginPass loginPass) {
-                        _model.setLoginPassForServer(_locationData.getServer(), loginPass);
-                        emitter.onSuccess(getFiles());
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {}
-
-                    @Override
-                    public void onComplete() {
-                        emitter.onComplete();
-                    }
-                });
-            }
-        }).flatMap(new Function<Maybe<String[]>, MaybeSource<String[]>>() {
             @Override
-            public MaybeSource<String[]> apply(Maybe<String[]> maybe) {
-                return maybe;
+            public void onSuccess(LoginPass loginPass) {
+                _model.setLoginPassForServer(_locationData.getServer(), loginPass);
+                emitter.onSuccess(getFiles());
             }
-        })).subscribe(new MaybeObserver<String[]>() {
+
+            @Override
+            public void onError(Throwable e) {}
+
+            @Override
+            public void onComplete() {
+                emitter.onComplete();
+            }
+        })).flatMap(maybe -> maybe)).subscribe(new MaybeObserver<String[]>() {
             @Override
             public void onSubscribe(Disposable d) {
 

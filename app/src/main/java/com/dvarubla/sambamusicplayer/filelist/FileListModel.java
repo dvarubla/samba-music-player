@@ -7,7 +7,6 @@ import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 import javax.inject.Inject;
 
 import io.reactivex.Maybe;
-import io.reactivex.functions.Function;
 
 public class FileListModel implements IFileListModel {
     @Inject
@@ -22,12 +21,8 @@ public class FileListModel implements IFileListModel {
 
     @Override
     public Maybe<String[]> getFiles(final LocationData location) {
-        return _smbUtils.connectToServer(location.getServer(), new LoginPass(_lp.getLogin(), _lp.getPass())).flatMap(new Function<Object, Maybe<String[]>>() {
-            @Override
-            public Maybe<String[]> apply(Object o){
-                return _smbUtils.getFilesFromShare(location.getShare(), location.getPath()).toMaybe();
-            }
-        });
+        return _smbUtils.connectToServer(location.getServer(), new LoginPass(_lp.getLogin(), _lp.getPass())).
+                flatMap(o -> _smbUtils.getFilesFromShare(location.getShare(), location.getPath()).toMaybe());
     }
 
     @Override

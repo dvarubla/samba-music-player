@@ -18,14 +18,11 @@ import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAct
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultActionDefault;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultActionRemoveItem;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.annotation.SwipeableItemResults;
-import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemViewHolder;
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableSwipeableItemViewHolder;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import java.util.ArrayList;
 
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
 
 public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEditableAdapter.ViewHolder>
@@ -143,12 +140,7 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
         setHasStableIds(true);
         _lastId = 0;
         _subj = PublishSubject.create();
-        _subj.subscribe(new Consumer<StringAndId>() {
-            @Override
-            public void accept(StringAndId stringAndId) {
-                _dataset.get((int) stringAndId.id).text = stringAndId.text;
-            }
-        });
+        _subj.subscribe(stringAndId -> _dataset.get((int) stringAndId.id).text = stringAndId.text);
     }
 
     @Override
@@ -157,12 +149,9 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.editable_location_item, parent, false);
         final ViewHolder holder= new ViewHolder(v);
-        RxTextView.textChanges(holder.edit).skipInitialValue().map(new Function<CharSequence, StringAndId>() {
-            @Override
-            public StringAndId apply(CharSequence charSequence){
-                return new StringAndId(holder.getAdapterPosition(), charSequence.toString());
-            }
-        }).subscribe(_subj);
+        RxTextView.textChanges(holder.edit).skipInitialValue().map(
+                seq -> new StringAndId(holder.getAdapterPosition(), seq.toString())
+        ).subscribe(_subj);
         return holder;
     }
 

@@ -8,7 +8,6 @@ import android.widget.TextView;
 import com.dvarubla.sambamusicplayer.R;
 import com.jakewharton.rxbinding2.view.RxView;
 
-import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
 
 public class LocationsFixedAdapter extends RecyclerView.Adapter<LocationsFixedAdapter.ViewHolder> {
@@ -47,12 +46,7 @@ public class LocationsFixedAdapter extends RecyclerView.Adapter<LocationsFixedAd
         final TextView tv = (TextView) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.location_item, parent, false);
 
-        RxView.clicks(tv).map(new Function<Object, String>() {
-            @Override
-            public String apply(Object view) {
-                return tv.getText().toString();
-            }
-        }).subscribe(_clickedButtonsSubj);
+        RxView.clicks(tv).map(o -> tv.getText().toString()).subscribe(_clickedButtonsSubj);
         return new ViewHolder(tv);
     }
 

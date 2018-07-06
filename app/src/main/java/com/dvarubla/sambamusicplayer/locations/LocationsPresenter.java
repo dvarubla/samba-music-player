@@ -7,7 +7,6 @@ import com.dvarubla.sambamusicplayer.settings.ISettings;
 import javax.inject.Inject;
 
 import dagger.Lazy;
-import io.reactivex.functions.Consumer;
 
 public class LocationsPresenter implements ILocationsPresenter {
     @Inject
@@ -22,12 +21,7 @@ public class LocationsPresenter implements ILocationsPresenter {
     @Inject
     LocationsPresenter(ILocationsFixedCtrl fixedLocComponent){
         _fixedLocComponent = fixedLocComponent;
-        _fixedLocComponent.locationClicked().subscribe(new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                _view.showFileList(s);
-            }
-        });
+        _fixedLocComponent.locationClicked().subscribe(s -> _view.showFileList(s));
     }
 
     @Override
@@ -39,38 +33,24 @@ public class LocationsPresenter implements ILocationsPresenter {
     @Override
     public void setView(ILocationsView view) {
         _view = view;
-        _view.editClicked().subscribe(new Consumer<Object>() {
-            @Override
-            public void accept(Object o) {
-                _isEditPressed = true;
-                _edLocComponent.get().setStrings(_fixedLocComponent.getStrings());
-                _view.editLocations();
-            }
+        _view.editClicked().subscribe(o -> {
+            _isEditPressed = true;
+            _edLocComponent.get().setStrings(_fixedLocComponent.getStrings());
+            _view.editLocations();
         });
 
-        _view.backClicked().subscribe(new Consumer<Object>() {
-            @Override
-            public void accept(Object o) {
+        _view.backClicked().subscribe(o -> {
                 _isEditPressed = false;
                 _edLocComponent.get().setStrings(_fixedLocComponent.getStrings());
-            }
         });
 
-        _view.saveClicked().subscribe(new Consumer<Object>() {
-            @Override
-            public void accept(Object o) {
+        _view.saveClicked().subscribe(o -> {
                 String [] locations = _edLocComponent.get().getStrings();
                 _fixedLocComponent.setStrings(locations);
                 _settings.saveLocations(locations);
                 _view.showSettingsSaved();
-            }
         });
 
-        _view.addClicked().subscribe(new Consumer<Object>() {
-            @Override
-            public void accept(Object o) {
-                _edLocComponent.get().addNewString("");
-            }
-        });
+        _view.addClicked().subscribe(o -> _edLocComponent.get().addNewString(""));
     }
 }
