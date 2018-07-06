@@ -1,5 +1,6 @@
 package com.dvarubla.sambamusicplayer.smbutils;
 
+import com.hierynomus.msfscc.FileAttributes;
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.mssmb2.SMBApiException;
 import com.hierynomus.security.bc.BCSecurityProvider;
@@ -50,11 +51,19 @@ public class SmbUtils implements ISmbUtils {
     public Single<IFileOrFolderItem[]> getFilesFromShare(final String shareName, final String path) {
         return Single.create((SingleOnSubscribe<IFileOrFolderItem[]>) emitter -> {
             DiskShare share = (DiskShare) _session.connectShare(shareName);
-            final ArrayList<IFileOrFolderItem> data = new ArrayList<>();
+            final ArrayList<IFileOrFolderItem> dirData = new ArrayList<>();
+            final ArrayList<IFileOrFolderItem> fileData = new ArrayList<>();
             for (FileIdBothDirectoryInformation f : share.list(path)) {
-                data.add(new FileItem(f.getFileName()));
+                if(! (f.getFileName().equals(".") || f.getFileName().equals("..")) ) {
+                    if ((f.getFileAttributes() & FileAttributes.FILE_ATTRIBUTE_DIRECTORY.getValue()) != 0) {
+                        dirData.add(new FolderItem(f.getFileName()));
+                    } else {
+                        fileData.add(new FileItem(f.getFileName()));
+                    }
+                }
             }
-            emitter.onSuccess(data.toArray(new IFileOrFolderItem[0]));
+            dirData.addAll(fileData);
+            emitter.onSuccess(dirData.toArray(new IFileOrFolderItem[0]));
         }).subscribeOn(Schedulers.io());
     }
 }

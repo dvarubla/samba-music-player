@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:gravity="center"
     android:id="@+id/file_or_dir_item"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:orientation="horizontal"
     xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView
+        android:layout_height="40dp"
+        android:layout_width="40dp"
+        android:scaleType="fitXY" app:srcCompat="@drawable/folder_image"
+        tools:ignore="ContentDescription" android:id="@+id/folder_icon"/>
     <TextView
         android:id="@+id/file_or_dir_name"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content" android:minHeight="40dp" android:padding="3dp"/>
 </LinearLayout>

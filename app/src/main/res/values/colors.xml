@@ -1,3 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="rec_view_alt">#F0F0F0</color>
+    <color name="rec_view_main">#FFFFFF</color>
 </resources>
