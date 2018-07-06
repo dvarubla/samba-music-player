@@ -18,6 +18,7 @@ import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 import javax.inject.Inject;
 
 import io.reactivex.Maybe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
 import static com.dvarubla.sambamusicplayer.Common.LOCATION_NAME;
 
@@ -70,7 +71,7 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
 
     @Override
     public Maybe<LoginPass> showLoginPassDialog(String server) {
-        return Maybe.create(emitter -> {
+        return Maybe.<LoginPass>create(emitter -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(getString(R.string.enter_server_login_pass, server));
             View viewInflated = LayoutInflater.from(this).inflate(
@@ -91,6 +92,6 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
                 emitter.onComplete();
             });
             builder.show();
-        });
+        }).subscribeOn(AndroidSchedulers.mainThread());
     }
 }

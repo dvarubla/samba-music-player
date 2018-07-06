@@ -7,7 +7,6 @@ import javax.inject.Inject;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Maybe;
 import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 
@@ -26,7 +25,7 @@ public class FileListPresenter implements IFileListPresenter {
     }
 
     private Maybe<String[]> getFiles(){
-        return _model.getFiles(_locationData).observeOn(AndroidSchedulers.mainThread());
+        return _model.getFiles(_locationData);
     }
 
     @Override

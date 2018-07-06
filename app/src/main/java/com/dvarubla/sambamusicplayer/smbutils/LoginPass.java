@@ -22,4 +22,9 @@ public class LoginPass {
     public void setPass(String pass) {
         _pass = pass;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof LoginPass && ((LoginPass) obj)._pass.equals(_pass) && ((LoginPass) obj)._login.equals(_login);
+    }
 }
