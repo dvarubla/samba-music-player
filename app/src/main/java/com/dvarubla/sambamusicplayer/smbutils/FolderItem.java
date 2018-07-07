@@ -3,7 +3,7 @@ package com.dvarubla.sambamusicplayer.smbutils;
 public class FolderItem implements IFileOrFolderItem {
     private String _name;
 
-    FolderItem(String name){
+    public FolderItem(String name){
         _name = name;
     }
 

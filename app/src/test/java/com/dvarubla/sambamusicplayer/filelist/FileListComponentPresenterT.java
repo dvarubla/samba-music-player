@@ -8,4 +8,5 @@ import dagger.Component;
 @Component(modules = {FileListModuleT.class, FileListModuleModelMT.class})
 public interface FileListComponentPresenterT {
     void inject(FileListPresenterShowT test);
+    void inject(FileListPresenterClickT test);
 }
