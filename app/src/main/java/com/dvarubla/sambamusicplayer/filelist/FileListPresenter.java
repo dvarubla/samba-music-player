@@ -24,27 +24,26 @@ public class FileListPresenter implements IFileListPresenter {
         _repeatSubj = PublishSubject.create();
     }
 
-    private Maybe<IFileOrFolderItem[]> getFiles(){
-        return _model.getFiles(_locationData);
-    }
-
     @Override
     public void setView(final IFileListView view) {
         _view = view;
-        Observable<IFileOrFolderItem[]> obs = getFiles().switchIfEmpty(
-            getLoginAndPass()
-        ).repeatWhen(completed -> _repeatSubj.toFlowable(BackpressureStrategy.MISSING)).
-        toObservable();
-        _fileListCtrl.setItemsObs(obs);
+        _model.setLocationData(_locationData);
+        _repeatSubj.onNext(new Object());
     }
 
     @Override
-    public void setLocation(String location) {
+    public void init(final IFileListView view, String location){
+        _view = view;
         _locationData = new LocationData(location);
+        _model.setLocationData(_locationData);
+        Observable<IFileOrFolderItem[]> obs = _model.getFiles().switchIfEmpty(
+                getLoginAndPass()
+        ).repeatWhen(completed -> _repeatSubj.toFlowable(BackpressureStrategy.MISSING)).toObservable();
+        _fileListCtrl.setItemsObs(obs);
     }
 
     private Maybe<IFileOrFolderItem[]> getLoginAndPass(){
-        return _view.showLoginPassDialog(_locationData.getServer()).flatMap(
+        return Maybe.just(new Object()).flatMap(o -> _view.showLoginPassDialog(_locationData.getServer())).flatMap(
                 loginPass -> {
                     _model.setLoginPassForServer(_locationData.getServer(), loginPass);
                     _repeatSubj.onNext(new Object());

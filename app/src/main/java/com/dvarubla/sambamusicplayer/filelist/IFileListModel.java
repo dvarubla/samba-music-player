@@ -7,6 +7,7 @@ import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 import io.reactivex.Maybe;
 
 public interface IFileListModel {
-    Maybe<IFileOrFolderItem[]> getFiles(LocationData location);
+    void setLocationData(LocationData location);
+    Maybe<IFileOrFolderItem[]> getFiles();
     void setLoginPassForServer(String server, LoginPass lp);
 }

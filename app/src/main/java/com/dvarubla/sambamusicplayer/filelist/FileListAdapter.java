@@ -11,8 +11,14 @@ import android.widget.TextView;
 import com.dvarubla.sambamusicplayer.R;
 import com.dvarubla.sambamusicplayer.smbutils.FolderItem;
 import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
+import com.jakewharton.rxbinding2.view.RxView;
+
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 
 public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHolder> {
+    private PublishSubject<IFileOrFolderItem> _itemClickedSubj;
+
     public void setItems(IFileOrFolderItem[] items) {
         _dataset = items.clone();
         notifyDataSetChanged();
@@ -30,13 +36,16 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
 
     FileListAdapter(){
         _dataset = new IFileOrFolderItem[0];
+        _itemClickedSubj = PublishSubject.create();
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final LinearLayout tv = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.file_or_dir_item, parent, false);
-        return new ViewHolder(tv);
+        ViewHolder vh = new ViewHolder(tv);
+        RxView.clicks(tv).map(nothing -> _dataset[vh.getAdapterPosition()]).subscribe(_itemClickedSubj);
+        return vh;
     }
 
     @Override
@@ -58,5 +67,9 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
     @Override
     public int getItemCount() {
         return _dataset.length;
+    }
+
+    public Observable<IFileOrFolderItem> itemClicked() {
+        return _itemClickedSubj;
     }
 }

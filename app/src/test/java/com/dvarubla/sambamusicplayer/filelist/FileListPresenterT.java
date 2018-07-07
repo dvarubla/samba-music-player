@@ -2,7 +2,6 @@ package com.dvarubla.sambamusicplayer.filelist;
 
 import com.dvarubla.sambamusicplayer.smbutils.FileItem;
 import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
-import com.dvarubla.sambamusicplayer.smbutils.LocationData;
 import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 
 import org.junit.Assert;
@@ -44,8 +43,7 @@ public class FileListPresenterT {
     }
 
     private void prepare(){
-        _presenter.setLocation("TEST/test/dir");
-        _presenter.setView(_view);
+        _presenter.init(_view, "TEST/test/dir");
     }
 
     @Test
@@ -55,7 +53,7 @@ public class FileListPresenterT {
         IFileOrFolderItem[] items = {
                 new FileItem("a") , new FileItem("b"), new FileItem("c")
         };
-        when(_model.getFiles(any(LocationData.class))).thenReturn(Maybe.just(items));
+        when(_model.getFiles()).thenReturn(Maybe.just(items));
         doAnswer(invocation -> {
             Assert.assertArrayEquals(
                     items,
@@ -64,6 +62,7 @@ public class FileListPresenterT {
             return null;
         }).when(_fileListCtrl).setItemsObs(any());
         prepare();
+        verify(_model, times(1)).setLocationData(any());
     }
 
     @Test
@@ -73,7 +72,7 @@ public class FileListPresenterT {
         IFileOrFolderItem[] items = {
                 new FileItem("a") , new FileItem("b"), new FileItem("c")
         };
-        when(_model.getFiles(any(LocationData.class))).thenReturn(Maybe.create(emitter -> {
+        when(_model.getFiles()).thenReturn(Maybe.create(emitter -> {
             if(i == 1){
                 emitter.onSuccess(items);
             } else {
@@ -106,7 +105,7 @@ public class FileListPresenterT {
         IFileOrFolderItem[] items = {
                 new FileItem("a") , new FileItem("b"), new FileItem("c")
         };
-        when(_model.getFiles(any(LocationData.class))).thenReturn(Maybe.create(emitter -> {
+        when(_model.getFiles()).thenReturn(Maybe.create(emitter -> {
             if(i == 3){
                 emitter.onSuccess(items);
             } else {

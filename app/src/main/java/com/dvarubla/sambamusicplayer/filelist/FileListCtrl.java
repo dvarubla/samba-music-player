@@ -22,4 +22,9 @@ class FileListCtrl implements IFileListCtrl {
     public void setItemsObs(Observable<IFileOrFolderItem[]> obs){
         obs.observeOn(AndroidSchedulers.mainThread()).subscribe(items -> _adapter.setItems(items));
     }
+
+    @Override
+    public Observable<IFileOrFolderItem> itemClicked() {
+        return _adapter.itemClicked();
+    }
 }

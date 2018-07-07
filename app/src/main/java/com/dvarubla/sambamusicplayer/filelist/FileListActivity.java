@@ -37,13 +37,15 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
         _needSave = false;
         ItemSingleton<FileListComponent> s = ItemSingleton.getInstance(FileListComponent.class);
         FileListComponent comp;
+        boolean firstTime = true;
         if(s.hasItem()){
-             comp = s.getItem();
+            firstTime = false;
+            comp = s.getItem();
             comp.inject(this);
         } else {
             comp = DaggerFileListComponent.builder().smbUtilsComponent(DaggerSmbUtilsComponent.builder().build()).build();
             comp.inject(this);
-            _presenter.setLocation(getIntent().getStringExtra(LOCATION_NAME));
+            _presenter.init(this, getIntent().getStringExtra(LOCATION_NAME));
             s.setItem(comp);
         }
         RecyclerView list = findViewById(R.id.filelist_view);
@@ -51,7 +53,9 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
                 new LinearLayoutManager(getApplicationContext())
         );
         comp.getFileListCtrl().setView(list);
-        _presenter.setView(this);
+        if(!firstTime){
+            _presenter.setView(this);
+        }
         super.onStart();
     }
 

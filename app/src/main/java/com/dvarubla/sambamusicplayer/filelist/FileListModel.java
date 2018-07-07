@@ -15,20 +15,27 @@ public class FileListModel implements IFileListModel {
 
     private LoginPass _lp;
 
+    private LocationData _locData;
+
     @Inject
     FileListModel(){
         _lp = new LoginPass("", "");
     }
 
     @Override
-    public Maybe<IFileOrFolderItem[]> getFiles(final LocationData location) {
+    public Maybe<IFileOrFolderItem[]> getFiles() {
         return Maybe.just(new Object()).
-                flatMap(o -> _smbUtils.connectToServer(location.getServer(), _lp)).
-                flatMap(o -> _smbUtils.getFilesFromShare(location.getShare(), location.getPath()).toMaybe());
+                flatMap(o -> _smbUtils.connectToServer(_locData.getServer(), _lp)).
+                flatMap(o -> _smbUtils.getFilesFromShare(_locData.getShare(), _locData.getPath()).toMaybe());
     }
 
     @Override
     public void setLoginPassForServer(String server, LoginPass lp) {
         _lp = lp;
+    }
+
+    @Override
+    public void setLocationData(LocationData location) {
+        _locData = location;
     }
 }
