@@ -22,7 +22,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class FileListPresenterT {
+public class FileListPresenterShowT {
     @Inject
     FileListPresenter _presenter;
 
@@ -43,17 +43,11 @@ public class FileListPresenterT {
     }
 
     private void prepare(){
+        when(_fileListCtrl.itemClicked()).thenReturn(Observable.empty());
         _presenter.init(_view, "TEST/test/dir");
     }
 
-    @Test
-    public void testSuccess(){
-        LoginPass lp = new LoginPass("e", "f");
-        when(_view.showLoginPassDialog(anyString())).thenReturn(Maybe.just(lp));
-        IFileOrFolderItem[] items = {
-                new FileItem("a") , new FileItem("b"), new FileItem("c")
-        };
-        when(_model.getFiles()).thenReturn(Maybe.just(items));
+    private void check(IFileOrFolderItem[] items){
         doAnswer(invocation -> {
             Assert.assertArrayEquals(
                     items,
@@ -61,6 +55,18 @@ public class FileListPresenterT {
             );
             return null;
         }).when(_fileListCtrl).setItemsObs(any());
+    }
+
+    @Test
+    public void testSuccess(){
+        when(_fileListCtrl.itemClicked()).thenReturn(Observable.empty());
+        LoginPass lp = new LoginPass("e", "f");
+        when(_view.showLoginPassDialog(anyString())).thenReturn(Maybe.just(lp));
+        IFileOrFolderItem[] items = {
+                new FileItem("a") , new FileItem("b"), new FileItem("c")
+        };
+        when(_model.getFiles()).thenReturn(Observable.just(items));
+        check(items);
         prepare();
         verify(_model, times(1)).setLocationData(any());
     }
@@ -72,21 +78,16 @@ public class FileListPresenterT {
         IFileOrFolderItem[] items = {
                 new FileItem("a") , new FileItem("b"), new FileItem("c")
         };
-        when(_model.getFiles()).thenReturn(Maybe.create(emitter -> {
+        when(_model.getFiles()).thenReturn(Observable.create(emitter -> {
             if(i == 1){
-                emitter.onSuccess(items);
+                emitter.onNext(items);
+                emitter.onComplete();
             } else {
                 emitter.onComplete();
             }
             i++;
         }));
-        doAnswer(invocation -> {
-            Assert.assertArrayEquals(
-                    items,
-                    ((Observable<IFileOrFolderItem[]>)invocation.getArgument(0)).test().values().get(0)
-            );
-            return null;
-        }).when(_fileListCtrl).setItemsObs(any());
+        check(items);
         prepare();
         verify(_model, times(1)).setLoginPassForServer("TEST", lp);
     }
@@ -105,21 +106,16 @@ public class FileListPresenterT {
         IFileOrFolderItem[] items = {
                 new FileItem("a") , new FileItem("b"), new FileItem("c")
         };
-        when(_model.getFiles()).thenReturn(Maybe.create(emitter -> {
+        when(_model.getFiles()).thenReturn(Observable.create(emitter -> {
             if(i == 3){
-                emitter.onSuccess(items);
+                emitter.onNext(items);
+                emitter.onComplete();
             } else {
                 emitter.onComplete();
             }
             i++;
         }));
-        doAnswer(invocation -> {
-            Assert.assertArrayEquals(
-                    items,
-                    ((Observable<IFileOrFolderItem[]>)invocation.getArgument(0)).test().values().get(0)
-            );
-            return null;
-        }).when(_fileListCtrl).setItemsObs(any());
+        check(items);
         prepare();
         InOrder inOrder = inOrder(_model);
         inOrder.verify(_model).setLoginPassForServer("TEST", lp);

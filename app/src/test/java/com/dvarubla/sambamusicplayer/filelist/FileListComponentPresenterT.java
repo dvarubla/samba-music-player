@@ -7,5 +7,5 @@ import dagger.Component;
 @PerActivity
 @Component(modules = {FileListModuleT.class, FileListModuleModelMT.class})
 public interface FileListComponentPresenterT {
-    void inject(FileListPresenterT test);
+    void inject(FileListPresenterShowT test);
 }

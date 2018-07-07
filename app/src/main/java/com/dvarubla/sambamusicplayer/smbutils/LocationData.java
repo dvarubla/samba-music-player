@@ -1,6 +1,6 @@
 package com.dvarubla.sambamusicplayer.smbutils;
 
-public class LocationData {
+public class LocationData implements Cloneable{
     private String _server;
     private String _share;
     private String _path;
@@ -22,5 +22,26 @@ public class LocationData {
 
     public String getPath() {
         return _path;
+    }
+
+    public void setServer(String server) {
+        this._server = server;
+    }
+
+    public void setShare(String share) {
+        this._share = share;
+    }
+
+    public void setPath(String path) {
+        this._path = path;
+    }
+
+    @Override
+    public LocationData clone() {
+        try {
+            return (LocationData) super.clone();
+        } catch (CloneNotSupportedException e) {
+            return null;
+        }
     }
 }
