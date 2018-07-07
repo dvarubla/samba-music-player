@@ -1,23 +1,25 @@
 package com.dvarubla.sambamusicplayer.filelist;
 
+import com.dvarubla.sambamusicplayer.PerActivity;
+
 import dagger.Module;
 import dagger.Provides;
 
 @Module
 public class FileListPresenterModule {
-    @FileListScope
+    @PerActivity
     @Provides
     IFileListPresenter getIFileListPresenter(FileListPresenter presenter){
         return presenter;
     }
 
-    @FileListScope
+    @PerActivity
     @Provides
     IFileListCtrl getIFileListCtrl(FileListCtrl ctrl){
         return ctrl;
     }
 
-    @FileListScope
+    @PerActivity
     @Provides
     FileListCtrl getFileListCtrl(){
         return new FileListCtrl();

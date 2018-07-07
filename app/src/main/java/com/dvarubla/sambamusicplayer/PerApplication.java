@@ -1,4 +1,4 @@
-package com.dvarubla.sambamusicplayer.settings;
+package com.dvarubla.sambamusicplayer;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -7,5 +7,5 @@ import javax.inject.Scope;
 
 @Scope
 @Retention(RetentionPolicy.RUNTIME)
-@interface SettingsScope {
+public @interface PerApplication {
 }

@@ -1,8 +1,10 @@
 package com.dvarubla.sambamusicplayer.filelist;
 
+import com.dvarubla.sambamusicplayer.PerActivity;
+
 import dagger.Component;
 
-@FileListScope
+@PerActivity
 @Component(modules = {FileListModuleT.class, FileListModuleModelMT.class})
 public interface FileListComponentPresenterT {
     void inject(FileListPresenterT test);

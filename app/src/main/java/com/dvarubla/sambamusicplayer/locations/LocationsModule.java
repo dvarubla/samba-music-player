@@ -1,5 +1,6 @@
 package com.dvarubla.sambamusicplayer.locations;
 
+import com.dvarubla.sambamusicplayer.PerActivity;
 import com.dvarubla.sambamusicplayer.settings.ISettings;
 
 import dagger.Module;
@@ -7,34 +8,34 @@ import dagger.Provides;
 
 @Module
 public class LocationsModule {
-    @LocationsScope
+    @PerActivity
     @Provides static ILocationsEditableCtrl getILocEdComp(LocationsEditableCtrl ctrl){
         return ctrl;
     }
 
-    @LocationsScope
+    @PerActivity
     @Provides static ILocationsFixedCtrl getILocFixComp(LocationsFixedCtrl ctrl){
         return ctrl;
     }
 
-    @LocationsScope
+    @PerActivity
     @Provides static LocationsEditableCtrl getLocEdComp(){
         return new LocationsEditableCtrl();
     }
 
-    @LocationsScope
+    @PerActivity
     @Provides static LocationsFixedCtrl getLocFixComp(ISettings settings){
         return new LocationsFixedCtrl(settings.getLocations());
     }
 
-    @LocationsScope
+    @PerActivity
     @Provides static LocationsEditableFragment getLocEdFrg(LocationsEditableCtrl ctrl) {
         LocationsEditableFragment frag = new LocationsEditableFragment();
         frag.setCtrl(ctrl);
         return frag;
     }
 
-    @LocationsScope
+    @PerActivity
     @Provides static LocationsFixedFragment getLocFixFrg(LocationsFixedCtrl ctrl) {
         LocationsFixedFragment frag = new LocationsFixedFragment();
         frag.setCtrl(ctrl);

@@ -2,12 +2,14 @@ package com.dvarubla.sambamusicplayer.settings;
 
 import android.content.Context;
 
+import com.dvarubla.sambamusicplayer.PerApplication;
+
 import dagger.Module;
 import dagger.Provides;
 
 @Module
-class SettingsModule {
-    @SettingsScope
+public class SettingsModule {
+    @PerApplication
     @Provides
     ISettings getSettings(Context context){
         return new Settings(context);

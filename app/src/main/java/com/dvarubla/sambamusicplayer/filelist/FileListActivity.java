@@ -10,9 +10,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
+import com.dvarubla.sambamusicplayer.Application;
 import com.dvarubla.sambamusicplayer.ItemSingleton;
 import com.dvarubla.sambamusicplayer.R;
-import com.dvarubla.sambamusicplayer.smbutils.DaggerSmbUtilsComponent;
 import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 
 import javax.inject.Inject;
@@ -43,7 +43,7 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
             comp = s.getItem();
             comp.inject(this);
         } else {
-            comp = DaggerFileListComponent.builder().smbUtilsComponent(DaggerSmbUtilsComponent.builder().build()).build();
+            comp = DaggerFileListComponent.builder().applicationComponent(Application.getComponent()).build();
             comp.inject(this);
             _presenter.init(this, getIntent().getStringExtra(LOCATION_NAME));
             s.setItem(comp);

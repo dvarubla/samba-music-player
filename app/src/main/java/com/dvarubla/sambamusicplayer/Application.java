@@ -1,18 +1,15 @@
 package com.dvarubla.sambamusicplayer;
 
-import com.dvarubla.sambamusicplayer.settings.DaggerSettingsComponent;
-import com.dvarubla.sambamusicplayer.settings.SettingsComponent;
-
 public class Application extends android.support.multidex.MultiDexApplication {
-    private static SettingsComponent _settingsComp;
+    private static ApplicationComponent _settingsComp;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        _settingsComp = DaggerSettingsComponent.builder().setContext(getApplicationContext()).build();
+        _settingsComp = DaggerApplicationComponent.builder().setContext(getApplicationContext()).build();
     }
 
-    public static SettingsComponent getSettingsComp() {
+    public static ApplicationComponent getComponent() {
         return _settingsComp;
     }
 }

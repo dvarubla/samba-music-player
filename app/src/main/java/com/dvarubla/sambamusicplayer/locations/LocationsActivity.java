@@ -2,10 +2,10 @@ package com.dvarubla.sambamusicplayer.locations;
 
 import android.content.Intent;
 import android.graphics.Rect;
+import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -83,7 +83,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
             _locFixedFragment = (LocationsFixedFragment) getSupportFragmentManager().findFragmentByTag("fixed_loc");
             _locFixedFragment.setCtrl(_locComp.getFixedCtrl());
         } else {
-            _locComp = DaggerLocationsComponent.builder().settingsComponent(Application.getSettingsComp()).build();
+            _locComp = DaggerLocationsComponent.builder().applicationComponent(Application.getComponent()).build();
             _locComp.inject(this);
             _locFixedFragment = _locComp.getFixedFragment();
 
