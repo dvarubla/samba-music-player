@@ -74,6 +74,12 @@ public class FileListModel implements IFileListModel {
     }
 
     @Override
+    public String removeFromPath() {
+        _locData.setPath(_locData.getPath().replaceFirst("(?:^|/)[^/]+$", ""));
+        return _locData.getPath();
+    }
+
+    @Override
     public void update(){
         _updateSubj.onNext(new Object());
     }

@@ -65,4 +65,14 @@ public class FileListPresenter implements IFileListPresenter {
                 }
         );
     }
+
+    @Override
+    public boolean onBackClicked() {
+        if(_curLocationData.getPath().equals(_rootLocationData.getPath())){
+            return true;
+        }
+        _curLocationData.setPath(_model.removeFromPath());
+        _model.update();
+        return false;
+    }
 }

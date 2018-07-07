@@ -11,5 +11,6 @@ public interface IFileListModel {
     Observable<IFileOrFolderItem[]> getFiles();
     void setLoginPassForServer(String server, LoginPass lp);
     String addPath(String pathComp);
+    String removeFromPath();
     void update();
 }

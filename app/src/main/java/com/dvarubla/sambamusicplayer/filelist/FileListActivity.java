@@ -98,4 +98,11 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
             builder.show();
         }).subscribeOn(AndroidSchedulers.mainThread());
     }
+
+    @Override
+    public void onBackPressed() {
+        if(_presenter.onBackClicked()) {
+            super.onBackPressed();
+        }
+    }
 }
