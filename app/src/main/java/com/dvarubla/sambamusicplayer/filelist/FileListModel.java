@@ -1,5 +1,8 @@
 package com.dvarubla.sambamusicplayer.filelist;
 
+import android.annotation.SuppressLint;
+
+import com.dvarubla.sambamusicplayer.player.IPlayer;
 import com.dvarubla.sambamusicplayer.settings.ISettings;
 import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
 import com.dvarubla.sambamusicplayer.smbutils.ISmbUtils;
@@ -18,6 +21,9 @@ import io.reactivex.subjects.PublishSubject;
 public class FileListModel implements IFileListModel {
     @Inject
     ISmbUtils _smbUtils;
+
+    @Inject
+    IPlayer _player;
 
     private PublishSubject<Object> _updateSubj;
 
@@ -82,5 +88,15 @@ public class FileListModel implements IFileListModel {
     @Override
     public void update(){
         _updateSubj.onNext(new Object());
+    }
+
+    @SuppressLint("CheckResult")
+    @Override
+    public void playFile(String file){
+        _smbUtils.getFileStream(_locData.getShare(), _locData.getPath() + "/" + file).subscribe(
+                strmAndSize -> {
+                    _player.play(strmAndSize.strm, strmAndSize.size);
+                }
+        );
     }
 }

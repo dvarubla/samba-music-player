@@ -13,4 +13,5 @@ public interface IFileListModel {
     String addPath(String pathComp);
     String removeFromPath();
     void update();
+    void playFile(String file);
 }

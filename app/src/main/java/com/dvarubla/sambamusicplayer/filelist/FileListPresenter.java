@@ -52,6 +52,8 @@ public class FileListPresenter implements IFileListPresenter {
             if(item instanceof FolderItem){
                 _curLocationData.setPath(_model.addPath(item.getName()));
                 _model.update();
+            } else {
+                _model.playFile(item.getName());
             }
         });
     }
