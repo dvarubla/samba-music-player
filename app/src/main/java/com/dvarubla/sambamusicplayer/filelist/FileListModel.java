@@ -71,12 +71,9 @@ public class FileListModel implements IFileListModel {
 
     @Override
     public String addPath(String pathComp) {
-        if(_locData.getPath().equals("")){
-            _locData.setPath(pathComp);
-        } else {
-            _locData.setPath(_locData.getPath() + "/" + pathComp);
-        }
-        return _locData.getPath();
+        String path = joinPath(_locData.getPath(), pathComp);
+        _locData.setPath(path);
+        return path;
     }
 
     @Override
@@ -93,10 +90,15 @@ public class FileListModel implements IFileListModel {
     @SuppressLint("CheckResult")
     @Override
     public void playFile(String file){
-        _smbUtils.getFileStream(_locData.getShare(), _locData.getPath() + "/" + file).subscribe(
-                strmAndSize -> {
-                    _player.play(strmAndSize.strm, strmAndSize.size);
-                }
+        _smbUtils.getFileStream(_locData.getShare(), joinPath(_locData.getPath(), file)).subscribe(
+                strmAndSize -> _player.play(strmAndSize.strm, strmAndSize.size)
         );
+    }
+
+    private String joinPath(String path1, String path2){
+        if(path1.equals("")){
+            return path2;
+        }
+        return path1 + "/" + path2;
     }
 }

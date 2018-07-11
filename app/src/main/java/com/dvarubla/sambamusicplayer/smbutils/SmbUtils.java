@@ -86,7 +86,7 @@ public class SmbUtils implements ISmbUtils {
                 InputStream input = file.getInputStream();
                 emitter.onSuccess(new StrmAndSize(input, info.getEndOfFile()));
             } catch(Exception e){
-                e.printStackTrace();
+                emitter.onError(e);
             }
         }).subscribeOn(Schedulers.io());
     }
