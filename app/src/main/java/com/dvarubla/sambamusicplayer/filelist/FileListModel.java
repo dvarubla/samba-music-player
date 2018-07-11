@@ -14,8 +14,8 @@ import java.util.HashMap;
 import javax.inject.Inject;
 
 import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
-import io.reactivex.Single;
 import io.reactivex.subjects.PublishSubject;
 
 public class FileListModel implements IFileListModel {
@@ -26,6 +26,7 @@ public class FileListModel implements IFileListModel {
     IPlayer _player;
 
     private PublishSubject<Object> _updateSubj;
+    private Flowable<Object> _updateSubjFlowable;
 
     private HashMap<String, LoginPass> _authData;
 
@@ -38,24 +39,24 @@ public class FileListModel implements IFileListModel {
         _settings = settings;
         _authData = _settings.getAuthData();
         _updateSubj = PublishSubject.create();
+        _updateSubjFlowable = _updateSubj.toFlowable(BackpressureStrategy.BUFFER);
+    }
+
+    private LoginPass getLoginPass(LocationData data){
+        if(_authData.containsKey(data.getServer())){
+            return _authData.get(data.getServer());
+        } else {
+            return new LoginPass("", "");
+        }
     }
 
     @Override
     public Observable<IFileOrFolderItem[]> getFiles() {
-        return Observable.just(new Object()).
-                flatMap(o -> {
-                    if(_authData.containsKey(_locData.getServer())){
-                        return _smbUtils.connectToServer(_locData.getServer(), _authData.get(_locData.getServer())).toObservable();
-                    } else {
-                        return _smbUtils.connectToServer(_locData.getServer(), new LoginPass("", "")).toObservable();
-                    }
-                }).
-                flatMap(o -> getFilesWrap());
-    }
-
-    private Observable<IFileOrFolderItem[]> getFilesWrap(){
-        return Single.just(new Object()).flatMap(o -> _smbUtils.getFilesFromShare(_locData.getShare(), _locData.getPath())).
-                repeatWhen(completed -> _updateSubj.toFlowable(BackpressureStrategy.BUFFER)).toObservable();
+        return Observable.just(new Object()).flatMap(
+                o -> _smbUtils.getFilesFromShare(_locData, getLoginPass(_locData)).toObservable())
+                .repeatWhen(
+                    o -> _updateSubjFlowable.toObservable()
+                );
     }
 
     @Override
@@ -90,7 +91,9 @@ public class FileListModel implements IFileListModel {
     @SuppressLint("CheckResult")
     @Override
     public void playFile(String file){
-        _smbUtils.getFileStream(_locData.getShare(), joinPath(_locData.getPath(), file)).subscribe(
+        LocationData tLoc = _locData.clone();
+        tLoc.setPath(joinPath(_locData.getPath(), file));
+        _smbUtils.getFileStream(tLoc, getLoginPass(tLoc)).subscribe(
                 strmAndSize -> _player.play(getFileExt(file), strmAndSize.strm, strmAndSize.size)
         );
     }

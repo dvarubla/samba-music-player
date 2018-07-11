@@ -22,72 +22,101 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 
 import io.reactivex.Maybe;
-import io.reactivex.Single;
-import io.reactivex.SingleOnSubscribe;
 import io.reactivex.schedulers.Schedulers;
 
 public class SmbUtils implements ISmbUtils {
+    private static class ServerAndShare{
+        String server;
+        String share;
+
+        @Override
+        public int hashCode() {
+            return server.hashCode() << 6 | share.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof ServerAndShare &&
+                    server.equals(((ServerAndShare) obj).server) && share.equals(((ServerAndShare) obj).share);
+        }
+
+        ServerAndShare(String server, String share){
+            this.server = server;
+            this.share = share;
+        }
+    }
+
     private SMBClient _client;
-    private Connection _connection;
-    private Session _session;
+    private HashMap<String, Connection> _connections;
+    private HashMap<String, Session> _sessions;
+    private HashMap<ServerAndShare, DiskShare> _shares;
 
     SmbUtils(){
         SmbConfig config = SmbConfig.builder().withAuthenticators(Collections.singletonList(new NtlmAuthenticator.Factory()))
                 .withSecurityProvider(new BCSecurityProvider()).build();
         _client = new SMBClient(config);
+        _connections = new HashMap<>();
+        _sessions = new HashMap<>();
+        _shares = new HashMap<>();
     }
+
+    private void checkShare(LocationData locData, LoginPass loginPass) throws IOException {
+        if(!_connections.containsKey(locData.getServer())){
+            _connections.put(locData.getServer(), _client.connect(locData.getServer()));
+        }
+        if (!_sessions.containsKey(locData.getServer())) {
+            Connection conn = _connections.get(locData.getServer());
+            AuthenticationContext ac = new AuthenticationContext(loginPass.getLogin(), loginPass.getPass().toCharArray(), "");
+            _sessions.put(locData.getServer(), conn.authenticate(ac));
+        }
+        if (!_shares.containsKey(new ServerAndShare(locData.getServer(), locData.getShare()))) {
+            Session sess = _sessions.get(locData.getServer());
+            _shares.put(
+                    new ServerAndShare(locData.getServer(), locData.getShare()),
+                    (DiskShare) sess.connectShare(locData.getShare())
+            );
+        }
+    }
+
     @Override
-    public Maybe<Object> connectToServer(final String serverName, final LoginPass loginPass) {
-        return Maybe.create(emitter -> {
+    public Maybe<IFileOrFolderItem[]> getFilesFromShare(LocationData locData, LoginPass loginPass) {
+        return Maybe.<IFileOrFolderItem[]>create( emitter -> {
             try {
-                _connection = _client.connect(serverName);
-                AuthenticationContext ac = new AuthenticationContext(loginPass.getLogin(), loginPass.getPass().toCharArray(), "");
-                _session = _connection.authenticate(ac);
-                emitter.onSuccess(new Object());
-            } catch (IOException e) {
-                emitter.onError(e);
-            } catch (SMBApiException e){
+                checkShare(locData, loginPass);
+                DiskShare share = _shares.get(new ServerAndShare(locData.getServer(), locData.getShare()));
+                final ArrayList<IFileOrFolderItem> dirData = new ArrayList<>();
+                final ArrayList<IFileOrFolderItem> fileData = new ArrayList<>();
+                for (FileIdBothDirectoryInformation f : share.list(locData.getPath())) {
+                    if (!(f.getFileName().equals(".") || f.getFileName().equals(".."))) {
+                        if ((f.getFileAttributes() & FileAttributes.FILE_ATTRIBUTE_DIRECTORY.getValue()) != 0) {
+                            dirData.add(new FolderItem(f.getFileName()));
+                        } else if (f.getFileName().matches(".*\\.(?:mp3|flac|wav|aac|m4a)$")) {
+                            fileData.add(new FileItem(f.getFileName()));
+                        }
+                    }
+                }
+                dirData.addAll(fileData);
+                emitter.onSuccess(dirData.toArray(new IFileOrFolderItem[0]));
+            } catch (SMBApiException exc){
                 emitter.onComplete();
             }
         }).subscribeOn(Schedulers.io());
     }
 
     @Override
-    public Single<IFileOrFolderItem[]> getFilesFromShare(final String shareName, final String path) {
-        return Single.create((SingleOnSubscribe<IFileOrFolderItem[]>) emitter -> {
-            DiskShare share = (DiskShare) _session.connectShare(shareName);
-            final ArrayList<IFileOrFolderItem> dirData = new ArrayList<>();
-            final ArrayList<IFileOrFolderItem> fileData = new ArrayList<>();
-            for (FileIdBothDirectoryInformation f : share.list(path)) {
-                if(! (f.getFileName().equals(".") || f.getFileName().equals("..")) ) {
-                    if ((f.getFileAttributes() & FileAttributes.FILE_ATTRIBUTE_DIRECTORY.getValue()) != 0) {
-                        dirData.add(new FolderItem(f.getFileName()));
-                    } else if(f.getFileName().matches(".*\\.(?:mp3|flac|wav|aac|m4a)$")){
-                        fileData.add(new FileItem(f.getFileName()));
-                    }
-                }
-            }
-            dirData.addAll(fileData);
-            emitter.onSuccess(dirData.toArray(new IFileOrFolderItem[0]));
-        }).subscribeOn(Schedulers.io());
-    }
-
-    @Override
-    public Single<StrmAndSize> getFileStream(String shareName, String path) {
-        return Single.<StrmAndSize>create(emitter -> {
-            try {
-                DiskShare share = (DiskShare) _session.connectShare(shareName);
-                FileStandardInformation info = share.getFileInformation(path, FileStandardInformation.class);
-                File file = share.openFile(path,
-                        EnumSet.of(AccessMask.GENERIC_READ), null, SMB2ShareAccess.ALL,
-                        SMB2CreateDisposition.FILE_OPEN, null);
-                InputStream input = file.getInputStream();
-                emitter.onSuccess(new StrmAndSize(input, info.getEndOfFile()));
-            } catch(Exception e){
-                emitter.onError(e);
-            }
+    public Maybe<StrmAndSize> getFileStream(LocationData locData, LoginPass loginPass) {
+        return Maybe.<StrmAndSize>create( emitter -> {
+            checkShare(locData, loginPass);
+            DiskShare share = _shares.get(new ServerAndShare(locData.getServer(), locData.getShare()));
+            FileStandardInformation info = share.getFileInformation(locData.getPath(), FileStandardInformation.class);
+            File file = share.openFile(locData.getPath(),
+                    EnumSet.of(AccessMask.GENERIC_READ), null, SMB2ShareAccess.ALL,
+                    SMB2CreateDisposition.FILE_OPEN, null);
+            InputStream input = file.getInputStream();
+            emitter.onSuccess(new StrmAndSize(input, info.getEndOfFile()));
         }).subscribeOn(Schedulers.io());
     }
 }
