@@ -6,6 +6,8 @@
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:orientation="horizontal"
+    android:minHeight="40dp"
+    android:padding="2dp"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <ImageView
         android:layout_height="40dp"
@@ -15,5 +17,8 @@
     <TextView
         android:id="@+id/file_or_dir_name"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:minHeight="40dp" android:padding="3dp"/>
+        android:layout_height="wrap_content"
+        android:paddingLeft="4dp"
+        tools:ignore="RtlSymmetry"
+        android:paddingStart="4dp" />
 </LinearLayout>

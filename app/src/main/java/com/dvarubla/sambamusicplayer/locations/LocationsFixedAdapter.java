@@ -45,13 +45,17 @@ public class LocationsFixedAdapter extends RecyclerView.Adapter<LocationsFixedAd
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final TextView tv = (TextView) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.location_item, parent, false);
-
         RxView.clicks(tv).map(o -> tv.getText().toString()).subscribe(_clickedButtonsSubj);
         return new ViewHolder(tv);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        if(position % 2 == 1) {
+            holder.item.setBackgroundColor(holder.item.getResources().getColor(R.color.rec_view_alt));
+        } else {
+            holder.item.setBackgroundColor(holder.item.getResources().getColor(R.color.rec_view_main));
+        }
         holder.item.setText(_dataset[position]);
     }
 

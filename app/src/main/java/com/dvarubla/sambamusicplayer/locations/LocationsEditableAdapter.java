@@ -157,6 +157,11 @@ public class LocationsEditableAdapter extends RecyclerView.Adapter<LocationsEdit
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+        if(position % 2 == 1) {
+            holder.item.setBackgroundColor(holder.item.getResources().getColor(R.color.rec_view_alt));
+        } else {
+            holder.item.setBackgroundColor(holder.item.getResources().getColor(R.color.rec_view_main));
+        }
         String text = _dataset.get(position).text;
         holder.edit.setText(text);
     }
