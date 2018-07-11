@@ -4,5 +4,5 @@ import java.io.InputStream;
 
 public interface IServer {
     int PORT = 8889;
-    void setPlayData(InputStream strm, long size);
+    void setPlayData(String ext, InputStream strm, long size);
 }

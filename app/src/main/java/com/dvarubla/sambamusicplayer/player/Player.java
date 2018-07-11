@@ -23,9 +23,9 @@ public class Player implements IPlayer {
     }
 
     @Override
-    public void play(InputStream strm, long size) {
+    public void play(String ext, InputStream strm, long size) {
         _player.reset();
-        _server.setPlayData(strm, size);
+        _server.setPlayData(ext, strm, size);
         try {
             _player.setDataSource(_context, Uri.parse("http://localhost:" + IServer.PORT));
             _player.prepare();

@@ -64,7 +64,7 @@ public class SmbUtils implements ISmbUtils {
                 if(! (f.getFileName().equals(".") || f.getFileName().equals("..")) ) {
                     if ((f.getFileAttributes() & FileAttributes.FILE_ATTRIBUTE_DIRECTORY.getValue()) != 0) {
                         dirData.add(new FolderItem(f.getFileName()));
-                    } else if(f.getFileName().matches(".*\\.mp3$")){
+                    } else if(f.getFileName().matches(".*\\.(?:mp3|flac|wav|aac|m4a)$")){
                         fileData.add(new FileItem(f.getFileName()));
                     }
                 }

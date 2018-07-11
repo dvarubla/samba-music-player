@@ -91,8 +91,13 @@ public class FileListModel implements IFileListModel {
     @Override
     public void playFile(String file){
         _smbUtils.getFileStream(_locData.getShare(), joinPath(_locData.getPath(), file)).subscribe(
-                strmAndSize -> _player.play(strmAndSize.strm, strmAndSize.size)
+                strmAndSize -> _player.play(getFileExt(file), strmAndSize.strm, strmAndSize.size)
         );
+    }
+
+    private String getFileExt(String fileName){
+        int i = fileName.lastIndexOf('.');
+        return fileName.substring(i+1);
     }
 
     private String joinPath(String path1, String path2){

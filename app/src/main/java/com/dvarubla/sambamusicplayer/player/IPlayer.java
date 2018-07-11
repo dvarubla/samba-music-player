@@ -3,5 +3,5 @@ package com.dvarubla.sambamusicplayer.player;
 import java.io.InputStream;
 
 public interface IPlayer {
-    void play(InputStream strm, long size);
+    void play(String name, InputStream strm, long size);
 }
