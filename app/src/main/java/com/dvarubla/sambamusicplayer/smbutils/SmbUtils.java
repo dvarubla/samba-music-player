@@ -1,10 +1,13 @@
 package com.dvarubla.sambamusicplayer.smbutils;
 
+import android.annotation.SuppressLint;
+
 import com.hierynomus.msdtyp.AccessMask;
 import com.hierynomus.msfscc.FileAttributes;
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.msfscc.fileinformation.FileStandardInformation;
 import com.hierynomus.mssmb2.SMB2CreateDisposition;
+import com.hierynomus.mssmb2.SMB2CreateOptions;
 import com.hierynomus.mssmb2.SMB2ShareAccess;
 import com.hierynomus.mssmb2.SMBApiException;
 import com.hierynomus.security.bc.BCSecurityProvider;
@@ -18,14 +21,17 @@ import com.hierynomus.smbj.share.DiskShare;
 import com.hierynomus.smbj.share.File;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.MaybeSubject;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 public class SmbUtils implements ISmbUtils {
     private static class ServerAndShare{
@@ -53,7 +59,9 @@ public class SmbUtils implements ISmbUtils {
     private HashMap<String, Connection> _connections;
     private HashMap<String, Session> _sessions;
     private HashMap<ServerAndShare, DiskShare> _shares;
+    private Subject<Observable<Object>> _quantumSubj;
 
+    @SuppressLint("CheckResult")
     SmbUtils(){
         SmbConfig config = SmbConfig.builder().withAuthenticators(Collections.singletonList(new NtlmAuthenticator.Factory()))
                 .withSecurityProvider(new BCSecurityProvider()).build();
@@ -61,6 +69,8 @@ public class SmbUtils implements ISmbUtils {
         _connections = new HashMap<>();
         _sessions = new HashMap<>();
         _shares = new HashMap<>();
+        _quantumSubj = PublishSubject.<Observable<Object>>create().toSerialized();
+        _quantumSubj.concatMap(e -> e).subscribe();
     }
 
     private void checkShare(LocationData locData, LoginPass loginPass) throws IOException {
@@ -83,7 +93,9 @@ public class SmbUtils implements ISmbUtils {
 
     @Override
     public Maybe<IFileOrFolderItem[]> getFilesFromShare(LocationData locData, LoginPass loginPass) {
-        return Maybe.<IFileOrFolderItem[]>create( emitter -> {
+        MaybeSubject<IFileOrFolderItem[]> subj = MaybeSubject.create();
+        Maybe<IFileOrFolderItem[]> ret = subj.cache();
+        _quantumSubj.onNext(Observable.fromCallable( () -> {
             try {
                 checkShare(locData, loginPass);
                 DiskShare share = _shares.get(new ServerAndShare(locData.getServer(), locData.getShare()));
@@ -99,24 +111,33 @@ public class SmbUtils implements ISmbUtils {
                     }
                 }
                 dirData.addAll(fileData);
-                emitter.onSuccess(dirData.toArray(new IFileOrFolderItem[0]));
+                subj.onSuccess(dirData.toArray(new IFileOrFolderItem[0]));
             } catch (SMBApiException exc){
-                emitter.onComplete();
+                subj.onComplete();
             }
-        }).subscribeOn(Schedulers.io());
+            return new Object();
+        }).subscribeOn(Schedulers.io()));
+        return ret.observeOn(Schedulers.io());
     }
 
     @Override
-    public Maybe<StrmAndSize> getFileStream(LocationData locData, LoginPass loginPass) {
-        return Maybe.<StrmAndSize>create( emitter -> {
-            checkShare(locData, loginPass);
-            DiskShare share = _shares.get(new ServerAndShare(locData.getServer(), locData.getShare()));
-            FileStandardInformation info = share.getFileInformation(locData.getPath(), FileStandardInformation.class);
-            File file = share.openFile(locData.getPath(),
-                    EnumSet.of(AccessMask.GENERIC_READ), null, SMB2ShareAccess.ALL,
-                    SMB2CreateDisposition.FILE_OPEN, null);
-            InputStream input = file.getInputStream();
-            emitter.onSuccess(new StrmAndSize(input, info.getEndOfFile()));
-        }).subscribeOn(Schedulers.io());
+    public Maybe<IFileStrm> getFileStream(LocationData locData, LoginPass loginPass) {
+        MaybeSubject<IFileStrm> subj = MaybeSubject.create();
+        Maybe<IFileStrm> ret = subj.cache();
+        _quantumSubj.onNext(Observable.fromCallable( () -> {
+            try {
+                checkShare(locData, loginPass);
+                DiskShare share = _shares.get(new ServerAndShare(locData.getServer(), locData.getShare()));
+                FileStandardInformation info = share.getFileInformation(locData.getPath(), FileStandardInformation.class);
+                File file = share.openFile(locData.getPath(),
+                        EnumSet.of(AccessMask.GENERIC_READ), null, SMB2ShareAccess.ALL,
+                        SMB2CreateDisposition.FILE_OPEN, Collections.singleton(SMB2CreateOptions.FILE_SEQUENTIAL_ONLY));
+                subj.onSuccess(new FileStrm(_quantumSubj, file, (int) info.getEndOfFile()));
+            } catch (SMBApiException exc){
+                subj.onComplete();
+            }
+            return new Object();
+        }).subscribeOn(Schedulers.io()));
+        return ret.observeOn(Schedulers.io());
     }
 }

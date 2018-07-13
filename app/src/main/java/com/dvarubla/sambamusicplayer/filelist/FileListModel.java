@@ -1,7 +1,5 @@
 package com.dvarubla.sambamusicplayer.filelist;
 
-import android.annotation.SuppressLint;
-
 import com.dvarubla.sambamusicplayer.player.IPlayer;
 import com.dvarubla.sambamusicplayer.settings.ISettings;
 import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
@@ -13,33 +11,53 @@ import java.util.HashMap;
 
 import javax.inject.Inject;
 
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 public class FileListModel implements IFileListModel {
     @Inject
     ISmbUtils _smbUtils;
 
-    @Inject
-    IPlayer _player;
+    private IPlayer _player;
 
-    private PublishSubject<Object> _updateSubj;
-    private Flowable<Object> _updateSubjFlowable;
+    private PublishSubject<Object> _onAudioClickSubj;
 
     private HashMap<String, LoginPass> _authData;
 
     private LocationData _locData;
+    private LocationData _fileLocData;
 
     private ISettings _settings;
 
+
     @Inject
-    FileListModel(ISettings settings){
+    FileListModel(ISettings settings, IPlayer player){
+        _player = player;
         _settings = settings;
         _authData = _settings.getAuthData();
-        _updateSubj = PublishSubject.create();
-        _updateSubjFlowable = _updateSubj.toFlowable(BackpressureStrategy.BUFFER);
+        PublishSubject<Object> onStopSubj = PublishSubject.create();
+        _onAudioClickSubj = PublishSubject.create();
+
+        Observable.just(new Object()).observeOn(Schedulers.io()).
+        delaySubscription(_onAudioClickSubj).map(o -> {
+            _player.stop();
+            return new Object();
+        }).zipWith(onStopSubj, (a, b) -> b).observeOn(Schedulers.io()).
+        flatMap(o -> _smbUtils.getFileStream(_fileLocData, getLoginPass(_fileLocData)).toObservable().
+        observeOn(Schedulers.io()).map(
+            strm -> {
+                _player.play(getFileExt(_fileLocData.getPath()), strm);
+                return strm;
+            }
+        )).
+        zipWith(_player.onStart(), (a, b) -> a).repeatWhen(c -> c.zipWith(_onAudioClickSubj, (a, b) -> a)).
+        zipWith(_player.onFileFinish(), (a, b) -> a).map(strm -> {
+            strm.close();
+            return new Object();
+        }).subscribe();
+        _player.onStop().subscribe(onStopSubj);
+        onStopSubj.onNext(new Object());
     }
 
     private LoginPass getLoginPass(LocationData data){
@@ -53,10 +71,8 @@ public class FileListModel implements IFileListModel {
     @Override
     public Observable<IFileOrFolderItem[]> getFiles() {
         return Observable.just(new Object()).flatMap(
-                o -> _smbUtils.getFilesFromShare(_locData, getLoginPass(_locData)).toObservable())
-                .repeatWhen(
-                    o -> _updateSubjFlowable.toObservable()
-                );
+                o -> _smbUtils.getFilesFromShare(_locData, getLoginPass(_locData)).toObservable()
+        );
     }
 
     @Override
@@ -84,18 +100,10 @@ public class FileListModel implements IFileListModel {
     }
 
     @Override
-    public void update(){
-        _updateSubj.onNext(new Object());
-    }
-
-    @SuppressLint("CheckResult")
-    @Override
     public void playFile(String file){
-        LocationData tLoc = _locData.clone();
-        tLoc.setPath(joinPath(_locData.getPath(), file));
-        _smbUtils.getFileStream(tLoc, getLoginPass(tLoc)).subscribe(
-                strmAndSize -> _player.play(getFileExt(file), strmAndSize.strm, strmAndSize.size)
-        );
+        _fileLocData = _locData.clone();
+        _fileLocData.setPath(joinPath(_locData.getPath(), file));
+        _onAudioClickSubj.onNext(new Object());
     }
 
     private String getFileExt(String fileName){

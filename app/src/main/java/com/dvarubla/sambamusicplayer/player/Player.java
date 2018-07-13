@@ -1,37 +1,55 @@
 package com.dvarubla.sambamusicplayer.player;
 
-import android.content.Context;
 import android.media.MediaPlayer;
-import android.net.Uri;
+
+import com.dvarubla.sambamusicplayer.smbutils.IFileStrm;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+
 public class Player implements IPlayer {
-    @Inject
-    IServer _server;
-    @Inject
-    Context _context;
+    private IServer _server;
 
-    private  MediaPlayer _player;
+    private MediaPlayer _player;
 
     @Inject
-    Player(){
+    Player(IServer server){
         _player = new MediaPlayer();
+        _server = server;
     }
 
     @Override
-    public void play(String ext, InputStream strm, long size) {
-        _player.reset();
-        _server.setPlayData(ext, strm, size);
+    public void play(String ext, IFileStrm strm) {
+        _server.setPlayData(ext, strm);
+        _server.start();
         try {
-            _player.setDataSource(_context, Uri.parse("http://localhost:" + IServer.PORT));
+            _player.setDataSource("http://localhost:" + IServer.PORT + "/t." + ext);
             _player.prepare();
             _player.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void stop() {
+        _player.reset();
+        _server.stop();
+    }
+
+    @Override
+    public Observable<Object> onStop() {
+        return _server.onStop();
+    }
+    @Override
+    public Observable<Object> onStart() {
+        return _server.onStart();
+    }
+    @Override
+    public Observable<Object> onFileFinish() {
+        return _server.onFileFinish();
     }
 }

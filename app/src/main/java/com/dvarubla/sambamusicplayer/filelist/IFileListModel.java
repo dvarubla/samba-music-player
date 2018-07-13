@@ -12,6 +12,5 @@ public interface IFileListModel {
     void setLoginPassForServer(String server, LoginPass lp);
     String addPath(String pathComp);
     String removeFromPath();
-    void update();
     void playFile(String file);
 }

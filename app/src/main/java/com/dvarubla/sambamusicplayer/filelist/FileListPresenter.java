@@ -8,7 +8,6 @@ import com.dvarubla.sambamusicplayer.smbutils.LocationData;
 
 import javax.inject.Inject;
 
-import io.reactivex.BackpressureStrategy;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
@@ -44,14 +43,13 @@ public class FileListPresenter implements IFileListPresenter {
         _model.setLocationData(_rootLocationData);
         Observable<IFileOrFolderItem[]> obs = _model.getFiles().switchIfEmpty(
                 getLoginAndPass().toObservable()
-        ).repeatWhen(completed -> completed.toFlowable(BackpressureStrategy.BUFFER).zipWith(
-                _repeatSubj.toFlowable(BackpressureStrategy.BUFFER), (a, b) -> a
-        ).toObservable());
+        ).repeatWhen(completed -> completed.zipWith(_repeatSubj, (a, b) -> a));
         _fileListCtrl.setItemsObs(obs);
+
         _fileListCtrl.itemClicked().subscribe(item -> {
             if(item instanceof FolderItem){
                 _curLocationData.setPath(_model.addPath(item.getName()));
-                _model.update();
+                _repeatSubj.onNext(new Object());
             } else {
                 _model.playFile(item.getName());
             }
@@ -74,7 +72,7 @@ public class FileListPresenter implements IFileListPresenter {
             return true;
         }
         _curLocationData.setPath(_model.removeFromPath());
-        _model.update();
+        _repeatSubj.onNext(new Object());
         return false;
     }
 }

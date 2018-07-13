@@ -1,13 +1,15 @@
 package com.dvarubla.sambamusicplayer.player;
 
+import com.dvarubla.sambamusicplayer.smbutils.IFileStrm;
+
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,45 +17,122 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 public class Server implements IServer{
+    private enum MsgType{
+        CONTINUE, STOP, START, FILE_FINISH
+    }
     private ServerSocket _httpServerSocket;
-    private PublishSubject<Object> _stopSubj;
-    private Flowable<Object> _flowableSubj;
-    private InputStream _strm;
+    private Subject<MsgType> _statusSubj;
+    private Subject<Object> _onStopSubj;
+    private Subject<Object> _onStartSubj;
+    private Subject<Object> _onFileFinishSubj;
+    private IFileStrm _strm;
     private String _ext;
-    private long _size;
     private HashMap<String, String> _contTypeMap;
-    private byte[] _byteBuffer = new byte[65536];
+    private final static int BUFFER_SIZE = 1024 * 100;
+    private byte[] _byteBuffer = new byte[BUFFER_SIZE];
+
+    static class State{
+        Socket socket;
+        public enum Val{
+            STARTED, ACTIVE, STOPPED, FILE_FINISHED
+        }
+        Val val;
+    }
 
     Server() {
         setContentTypes();
-        _stopSubj = PublishSubject.create();
-        _flowableSubj = _stopSubj.toFlowable(BackpressureStrategy.BUFFER);
+        _statusSubj = PublishSubject.<MsgType>create().toSerialized();
+        _onStopSubj = PublishSubject.create();
+        _onStartSubj = PublishSubject.create();
+        _onFileFinishSubj = PublishSubject.create();
         try {
             _httpServerSocket = new ServerSocket(PORT);
-            Observable.just(new Object()).observeOn(Schedulers.io()).map(
-                    o -> _httpServerSocket.accept()
-            ).flatMap(socket -> processSocket(socket, _strm, _size, _ext)).repeat().subscribe();
-
+            State state = new State();
+            state.val = State.Val.STOPPED;
+            Observable.defer( () -> {
+                switch (state.val){
+                    case STARTED:
+                        state.socket = _httpServerSocket.accept();
+                        state.val = State.Val.ACTIVE;
+                        return Observable.just(state).map(this::processSocket);
+                    case ACTIVE:
+                        return Observable.just(state);
+                }
+                return Observable.empty();
+            }).
+            flatMap(
+                    o -> this.copyBytes(state)
+            ).repeatWhen(c -> c.zipWith(_statusSubj.observeOn(Schedulers.io()), (a, b) -> b).flatMap(el -> {
+                switch (el) {
+                    case STOP:
+                        if (state.val == State.Val.ACTIVE) {
+                            finish(state);
+                            _onFileFinishSubj.onNext(new Object());
+                            _onStopSubj.onNext(new Object());
+                            state.val = State.Val.STOPPED;
+                        } else if (state.val == State.Val.FILE_FINISHED) {
+                            _onStopSubj.onNext(new Object());
+                            state.val = State.Val.STOPPED;
+                        }
+                        break;
+                    case START:
+                        if (state.val == State.Val.STOPPED) {
+                            state.val = State.Val.STARTED;
+                            _onStartSubj.onNext(new Object());
+                        }
+                        break;
+                    case FILE_FINISH:
+                        finish(state);
+                        _onFileFinishSubj.onNext(new Object());
+                        state.val = State.Val.FILE_FINISHED;
+                        break;
+                }
+                if(el == MsgType.CONTINUE) {
+                    return Observable.just(el).delay(100, TimeUnit.MILLISECONDS);
+                } else {
+                    return Observable.just(el);
+                }
+            })).subscribeOn(Schedulers.io()).subscribe();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void setPlayData(String ext, InputStream strm, long size) {
-        if(_strm != null){
-            _stopSubj.onNext(new Object());
-        }
+    public void setPlayData(String ext, IFileStrm strm) {
         _ext = ext;
-        _size = size;
         _strm = strm;
+    }
+
+    @Override
+    public void stop() {
+        _statusSubj.onNext(MsgType.STOP);
+    }
+
+    @Override
+    public void start() {
+        _statusSubj.onNext(MsgType.START);
+    }
+
+    @Override
+    public Observable<Object> onStop() {
+        return _onStopSubj;
+    }
+
+    @Override
+    public Observable<Object> onFileFinish() {
+        return _onFileFinishSubj;
+    }
+
+    @Override
+    public Observable<Object> onStart() {
+        return _onStartSubj;
     }
 
     private void setContentTypes(){
@@ -69,48 +148,44 @@ public class Server implements IServer{
         return _contTypeMap.get(str);
     }
 
-    private Observable<Object> processSocket(Socket socket, InputStream strm, long size, String ext) throws IOException {
-        OutputStream ostrm = socket.getOutputStream();
-        return Observable.just(new Object()).map( o -> {
-            BufferedReader is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter os = new PrintWriter(socket.getOutputStream(), true);
-            //noinspection StatementWithEmptyBody
-            while (!is.readLine().equals(""));
-            os.print("HTTP/1.1 200 OK" + "\r\n");
-            os.print("Content-Type: " + getContentType(ext) + "\r\n");
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E, d MMM yyyy HH:mm:ss 'GMT'", Locale.US);
-            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-            os.print("Date: " + simpleDateFormat.format(new Date()) + "\r\n");
-            os.print("Server: SambaMusicPlayer\r\n");
-            os.print("Accept-Ranges: bytes\r\n");
-            os.print("Content-Length: " + size + "\r\n");
-            os.print("Connection: Keep-Alive\r\n");
-            os.print("\r\n");
-            os.flush();
-            return new Object();
-        }).flatMap(o -> copyBytes(strm, ostrm, socket));
+    private State processSocket(State state) throws IOException {
+        BufferedReader is = new BufferedReader(new InputStreamReader(state.socket.getInputStream()));
+        PrintWriter os = new PrintWriter(state.socket.getOutputStream(), true);
+        //noinspection StatementWithEmptyBody
+        while (!is.readLine().equals(""));
+        os.print("HTTP/1.1 200 OK" + "\r\n");
+        os.print("Content-Type: " + getContentType(_ext) + "\r\n");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E, d MMM yyyy HH:mm:ss 'GMT'", Locale.US);
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        os.print("Date: " + simpleDateFormat.format(new Date()) + "\r\n");
+        os.print("Server: SambaMusicPlayer\r\n");
+        os.print("Accept-Ranges: bytes\r\n");
+        os.print("Content-Length: " + _strm.getSize() + "\r\n");
+        os.print("Connection: Keep-Alive\r\n");
+        os.print("\r\n");
+        os.flush();
+        return state;
     }
 
-    private Observable<Object> copyBytes(InputStream strm, OutputStream ostrm, Socket socket){
-        return Observable.just(new Object()).repeatWhen(completed -> completed.flatMap(o -> {
-            int len = strm.read(_byteBuffer);
-            if(len == -1){
-                socket.close();
-                return Observable.empty();
+    private Observable<Object> copyBytes(State state) throws IOException {
+        OutputStream ostrm = state.socket.getOutputStream();
+        return _strm.read(_byteBuffer, BUFFER_SIZE).map(len -> {
+            if(len != -1){
+                try {
+                    ostrm.write(_byteBuffer, 0, len);
+                    ostrm.flush();
+                    _statusSubj.onNext(MsgType.CONTINUE);
+                } catch (SocketException exc){
+                    _statusSubj.onNext(MsgType.FILE_FINISH);
+                }
+            } else {
+                _statusSubj.onNext(MsgType.FILE_FINISH);
             }
-            ostrm.write(_byteBuffer, 0, len);
-            ostrm.flush();
-            return Observable.just(new Object());
-        }).delay(40, TimeUnit.MILLISECONDS).takeUntil(
-                _flowableSubj.toObservable()
-        ).switchIfEmpty(emitter -> {
-            try {
-                socket.close();
-                strm.close();
-            } catch (IOException e) {
-                emitter.onError(e);
-            }
-            emitter.onComplete();
-        }));
+            return new Object();
+        }).toObservable();
+    }
+
+    private void finish(State state) throws IOException {
+        state.socket.close();
     }
 }
