@@ -1,55 +1,50 @@
 package com.dvarubla.sambamusicplayer.player;
 
-import android.media.MediaPlayer;
+import android.content.Context;
+import android.net.Uri;
 
 import com.dvarubla.sambamusicplayer.smbutils.IFileStrm;
-
-import java.io.IOException;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 
 import javax.inject.Inject;
 
-import io.reactivex.Observable;
-
 public class Player implements IPlayer {
-    private IServer _server;
+    Context _context;
 
-    private MediaPlayer _player;
+    private ExoPlayer _player;
+    private boolean _isPlaying;
 
     @Inject
-    Player(IServer server){
-        _player = new MediaPlayer();
-        _server = server;
+    Player(Context context){
+        _isPlaying = false;
+        _context = context;
+        DefaultTrackSelector trackSelector =
+                new DefaultTrackSelector();
+        _player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
     }
 
     @Override
     public void play(String ext, IFileStrm strm) {
-        _server.setPlayData(ext, strm);
-        _server.start();
-        try {
-            _player.setDataSource("http://localhost:" + IServer.PORT + "/t." + ext);
-            _player.prepare();
-            _player.start();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(_isPlaying){
+            _player.stop();
         }
+        _isPlaying = true;
+        SambaDataSource.Factory fact = new SambaDataSource.Factory(strm);
+        ExtractorMediaSource.Factory srcFact = new ExtractorMediaSource.Factory(fact);
+        MediaSource src = srcFact.createMediaSource(Uri.parse("file." + ext));
+
+        _player.prepare(src);
+        _player.setPlayWhenReady(true);
     }
 
     @Override
     public void stop() {
-        _player.reset();
-        _server.stop();
-    }
-
-    @Override
-    public Observable<Object> onStop() {
-        return _server.onStop();
-    }
-    @Override
-    public Observable<Object> onStart() {
-        return _server.onStart();
-    }
-    @Override
-    public Observable<Object> onFileFinish() {
-        return _server.onFileFinish();
+        if(_isPlaying){
+            _player.stop();
+        }
     }
 }

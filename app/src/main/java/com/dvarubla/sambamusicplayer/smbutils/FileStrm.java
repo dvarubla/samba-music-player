@@ -21,11 +21,11 @@ public class FileStrm implements IFileStrm{
     }
 
     @Override
-    public Single<Integer> read(byte[] buf, int len) {
+    public Single<Integer> read(byte[] buf, int bufferOffset, int len) {
         SingleSubject<Integer> subj = SingleSubject.create();
         Single<Integer> ret = subj.cache();
         _subj.onNext(Observable.fromCallable(() -> {
-            int readLen = _file.read(buf, _offset, 0, len);
+            int readLen = _file.read(buf, _offset, bufferOffset, len);
             _offset += readLen;
             subj.onSuccess(readLen);
             return new Object();

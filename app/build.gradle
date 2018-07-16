@@ -47,6 +47,7 @@ android {
 dependencies {
     implementation 'com.android.support:multidex:1.0.3'
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.8.2'
     //noinspection GradleCompatible
     implementation 'com.android.support:design:26.1.0'
     implementation 'com.github.rapid7:smbj-rpc:60f724387c1d6d82f6ad7bac26a3e9c62e953b71'

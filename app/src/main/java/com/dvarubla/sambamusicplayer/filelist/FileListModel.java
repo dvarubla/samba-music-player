@@ -36,28 +36,17 @@ public class FileListModel implements IFileListModel {
         _player = player;
         _settings = settings;
         _authData = _settings.getAuthData();
-        PublishSubject<Object> onStopSubj = PublishSubject.create();
         _onAudioClickSubj = PublishSubject.create();
 
         Observable.just(new Object()).observeOn(Schedulers.io()).
-        delaySubscription(_onAudioClickSubj).map(o -> {
-            _player.stop();
-            return new Object();
-        }).zipWith(onStopSubj, (a, b) -> b).observeOn(Schedulers.io()).
-        flatMap(o -> _smbUtils.getFileStream(_fileLocData, getLoginPass(_fileLocData)).toObservable().
+        delaySubscription(_onAudioClickSubj).flatMap(o -> _smbUtils.getFileStream(_fileLocData, getLoginPass(_fileLocData)).toObservable().
         observeOn(Schedulers.io()).map(
             strm -> {
+                _player.stop();
                 _player.play(getFileExt(_fileLocData.getPath()), strm);
                 return strm;
             }
-        )).
-        zipWith(_player.onStart(), (a, b) -> a).repeatWhen(c -> c.zipWith(_onAudioClickSubj, (a, b) -> a)).
-        zipWith(_player.onFileFinish(), (a, b) -> a).map(strm -> {
-            strm.close();
-            return new Object();
-        }).subscribe();
-        _player.onStop().subscribe(onStopSubj);
-        onStopSubj.onNext(new Object());
+        )).repeatWhen(c -> c.zipWith(_onAudioClickSubj, (a, b) -> a)).subscribe();
     }
 
     private LoginPass getLoginPass(LocationData data){

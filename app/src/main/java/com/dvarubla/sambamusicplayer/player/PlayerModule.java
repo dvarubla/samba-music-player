@@ -12,10 +12,4 @@ public class PlayerModule {
     public IPlayer getPlayer(Player player){
         return player;
     }
-
-    @PerApplication
-    @Provides
-    public IServer getServer(){
-        return new Server();
-    }
 }
