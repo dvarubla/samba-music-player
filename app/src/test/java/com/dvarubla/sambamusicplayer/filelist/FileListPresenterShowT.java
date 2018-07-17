@@ -2,6 +2,7 @@ package com.dvarubla.sambamusicplayer.filelist;
 
 import com.dvarubla.sambamusicplayer.smbutils.FileItem;
 import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
+import com.dvarubla.sambamusicplayer.smbutils.LocationData;
 import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 
 import org.junit.Assert;
@@ -44,6 +45,8 @@ public class FileListPresenterShowT {
 
     private void prepare(){
         when(_fileListCtrl.itemClicked()).thenReturn(Observable.empty());
+        when(_view.onFlingLeft()).thenReturn(Observable.empty());
+        when(_view.onFlingRight()).thenReturn(Observable.empty());
         _presenter.init(_view, "TEST/test/dir");
     }
 
@@ -89,7 +92,7 @@ public class FileListPresenterShowT {
         }));
         check(items);
         prepare();
-        verify(_model, times(1)).setLoginPassForServer("TEST", lp);
+        verify(_model, times(1)).setLoginPassForServer(new LocationData("TEST/test/dir"), lp);
     }
 
     @Test
@@ -118,7 +121,7 @@ public class FileListPresenterShowT {
         check(items);
         prepare();
         InOrder inOrder = inOrder(_model);
-        inOrder.verify(_model).setLoginPassForServer("TEST", lp);
-        inOrder.verify(_model, times(2)).setLoginPassForServer("TEST", lp2);
+        inOrder.verify(_model).setLoginPassForServer(new LocationData("TEST/test/dir"), lp);
+        inOrder.verify(_model, times(2)).setLoginPassForServer(new LocationData("TEST/test/dir"), lp2);
     }
 }

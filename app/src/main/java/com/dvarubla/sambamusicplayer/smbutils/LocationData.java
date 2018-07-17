@@ -44,4 +44,12 @@ public class LocationData implements Cloneable{
             return null;
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof LocationData &&
+                ((LocationData) obj)._server.equals(_server) &&
+                ((LocationData) obj)._share.equals(_share) &&
+                ((LocationData) obj)._path.equals(_path);
+    }
 }

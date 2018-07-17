@@ -9,8 +9,10 @@ import io.reactivex.Observable;
 public interface IFileListModel {
     void setLocationData(LocationData location);
     Observable<IFileOrFolderItem[]> getFiles();
-    void setLoginPassForServer(String server, LoginPass lp);
+    void setLoginPassForServer(LocationData data, LoginPass lp);
     String addPath(String pathComp);
     String removeFromPath();
     void playFile(String file);
+    void setNext();
+    void setPrevious();
 }

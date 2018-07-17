@@ -1,57 +1,35 @@
 package com.dvarubla.sambamusicplayer.filelist;
 
-import com.dvarubla.sambamusicplayer.player.IPlayer;
-import com.dvarubla.sambamusicplayer.settings.ISettings;
+import com.dvarubla.sambamusicplayer.playlist.IPlaylist;
+import com.dvarubla.sambamusicplayer.settings.ILoginPassMan;
 import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
 import com.dvarubla.sambamusicplayer.smbutils.ISmbUtils;
 import com.dvarubla.sambamusicplayer.smbutils.LocationData;
 import com.dvarubla.sambamusicplayer.smbutils.LoginPass;
 
-import java.util.HashMap;
-
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
 
 public class FileListModel implements IFileListModel {
     @Inject
     ISmbUtils _smbUtils;
 
-    private IPlayer _player;
-
-    private PublishSubject<Object> _onAudioClickSubj;
-
-    private HashMap<String, LoginPass> _authData;
-
-    private LocationData _locData;
-    private LocationData _fileLocData;
-
-    private ISettings _settings;
-
+    @Inject
+    ILoginPassMan _lpman;
 
     @Inject
-    FileListModel(ISettings settings, IPlayer player){
-        _player = player;
-        _settings = settings;
-        _authData = _settings.getAuthData();
-        _onAudioClickSubj = PublishSubject.create();
+    IPlaylist _playlist;
 
-        Observable.just(new Object()).observeOn(Schedulers.io()).
-        delaySubscription(_onAudioClickSubj).flatMap(o -> _smbUtils.getFileStream(_fileLocData, getLoginPass(_fileLocData)).toObservable().
-        observeOn(Schedulers.io()).map(
-            strm -> {
-                _player.stop();
-                _player.play(getFileExt(_fileLocData.getPath()), strm);
-                return strm;
-            }
-        )).repeatWhen(c -> c.zipWith(_onAudioClickSubj, (a, b) -> a)).subscribe();
+    private LocationData _locData;
+
+    @Inject
+    FileListModel(){
     }
 
     private LoginPass getLoginPass(LocationData data){
-        if(_authData.containsKey(data.getServer())){
-            return _authData.get(data.getServer());
+        if(_lpman.haveLoginPass(data)){
+            return _lpman.getLoginPass(data);
         } else {
             return new LoginPass("", "");
         }
@@ -65,9 +43,8 @@ public class FileListModel implements IFileListModel {
     }
 
     @Override
-    public void setLoginPassForServer(String server, LoginPass lp) {
-        _authData.put(server, lp);
-        _settings.saveAuthData(_authData);
+    public void setLoginPassForServer(LocationData data, LoginPass lp) {
+        _lpman.setLoginPass(data, lp);
     }
 
     @Override
@@ -90,14 +67,9 @@ public class FileListModel implements IFileListModel {
 
     @Override
     public void playFile(String file){
-        _fileLocData = _locData.clone();
-        _fileLocData.setPath(joinPath(_locData.getPath(), file));
-        _onAudioClickSubj.onNext(new Object());
-    }
-
-    private String getFileExt(String fileName){
-        int i = fileName.lastIndexOf('.');
-        return fileName.substring(i+1);
+        LocationData fileLocData = _locData.clone();
+        fileLocData.setPath(joinPath(_locData.getPath(), file));
+        _playlist.addFile(fileLocData);
     }
 
     private String joinPath(String path1, String path2){
@@ -105,5 +77,15 @@ public class FileListModel implements IFileListModel {
             return path2;
         }
         return path1 + "/" + path2;
+    }
+
+    @Override
+    public void setNext() {
+        _playlist.playNext();
+    }
+
+    @Override
+    public void setPrevious() {
+        _playlist.playPrev();
     }
 }

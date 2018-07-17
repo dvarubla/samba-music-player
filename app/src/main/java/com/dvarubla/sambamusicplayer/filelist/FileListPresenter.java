@@ -32,6 +32,13 @@ public class FileListPresenter implements IFileListPresenter {
         _view = view;
         _model.setLocationData(_rootLocationData);
         _repeatSubj.onNext(new Object());
+        setViewListeners(view);
+    }
+
+    @SuppressLint("CheckResult")
+    private void setViewListeners(IFileListView view){
+        view.onFlingLeft().subscribe(o -> _model.setNext());
+        view.onFlingRight().subscribe(o -> _model.setPrevious());
     }
 
     @SuppressLint("CheckResult")
@@ -54,12 +61,13 @@ public class FileListPresenter implements IFileListPresenter {
                 _model.playFile(item.getName());
             }
         });
+        setViewListeners(view);
     }
 
     private Maybe<IFileOrFolderItem[]> getLoginAndPass(){
         return Maybe.just(new Object()).flatMap(o -> _view.showLoginPassDialog(_rootLocationData.getServer())).flatMap(
                 loginPass -> {
-                    _model.setLoginPassForServer(_rootLocationData.getServer(), loginPass);
+                    _model.setLoginPassForServer(_rootLocationData, loginPass);
                     _repeatSubj.onNext(new Object());
                     return Maybe.empty();
                 }
