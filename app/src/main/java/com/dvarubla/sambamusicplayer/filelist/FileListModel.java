@@ -28,11 +28,7 @@ public class FileListModel implements IFileListModel {
     }
 
     private LoginPass getLoginPass(LocationData data){
-        if(_lpman.haveLoginPass(data)){
-            return _lpman.getLoginPass(data);
-        } else {
-            return new LoginPass("", "");
-        }
+        return _lpman.getLoginPass(data);
     }
 
     @Override

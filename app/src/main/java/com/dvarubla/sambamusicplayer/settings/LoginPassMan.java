@@ -19,7 +19,11 @@ public class LoginPassMan implements ILoginPassMan{
 
     @Override
     public LoginPass getLoginPass(LocationData locData) {
-        return _authData.get(locData.getServer());
+        if(haveLoginPass(locData)) {
+            return _authData.get(locData.getServer());
+        } else {
+            return new LoginPass("", "");
+        }
     }
 
     @Override

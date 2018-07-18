@@ -1,5 +1,7 @@
 package com.dvarubla.sambamusicplayer.playlist;
 
+import android.annotation.SuppressLint;
+
 import com.dvarubla.sambamusicplayer.player.IPlayer;
 import com.dvarubla.sambamusicplayer.settings.ILoginPassMan;
 import com.dvarubla.sambamusicplayer.smbutils.ISmbUtils;
@@ -21,6 +23,7 @@ public class Playlist implements IPlaylist{
     private PublishSubject<LocationData> _playSubj;
     private int _curIndex;
 
+    @SuppressLint("CheckResult")
     @Inject
     Playlist(IPlayer player, ILoginPassMan lpman, ISmbUtils smbUtils){
         _player = player;
@@ -32,11 +35,11 @@ public class Playlist implements IPlaylist{
         _playSubj.observeOn(Schedulers.io()).concatMap(data -> _smbUtils.getFileStream(data, _lpman.getLoginPass(data)).toObservable().
                 observeOn(Schedulers.io()).map(
                 strm -> {
-                    _player.stop();
                     _player.play(getFileExt(data.getPath()), strm);
                     return strm;
                 }
         )).subscribe();
+        _player.onStop().subscribe(o -> playNext());
     }
 
     @Override
@@ -44,6 +47,9 @@ public class Playlist implements IPlaylist{
         _uris.add(uri);
         if(_uris.size() == 1){
             _curIndex = 0;
+            _playSubj.onNext(_uris.get(_curIndex));
+        } else if(!_player.isPlaying() && _curIndex == _uris.size() - 1 - 1){
+            _curIndex++;
             _playSubj.onNext(_uris.get(_curIndex));
         }
     }
