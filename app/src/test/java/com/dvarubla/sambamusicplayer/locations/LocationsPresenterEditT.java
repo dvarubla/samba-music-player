@@ -1,6 +1,7 @@
 package com.dvarubla.sambamusicplayer.locations;
 
 import com.dvarubla.sambamusicplayer.settings.ISettings;
+import com.dvarubla.sambamusicplayer.toastman.IToastMan;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +18,9 @@ import static org.mockito.Mockito.when;
 public class LocationsPresenterEditT {
     @Inject
     LocationsPresenter _presenter;
+
+    @Inject
+    IToastMan _toastMan;
 
     @Inject
     ILocationsEditableCtrl _edCtrl;
@@ -61,7 +65,7 @@ public class LocationsPresenterEditT {
         when(_edCtrl.getStrings()).thenReturn(testLocsEd);
         _viewMockH.getOnSaveSubj().onNext(new Object());
         verify(_fixedCtrl, times(1)).setStrings(testLocsEd);
-        verify(_viewMockH.getView(), times(1)).showSettingsSaved();
+        verify(_toastMan, times(1)).showSettingsSaved();
         verify(_settings, times(1)).saveLocations(testLocsEd);
     }
 

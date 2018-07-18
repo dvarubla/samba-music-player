@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import com.dvarubla.sambamusicplayer.smbutils.FolderItem;
 import com.dvarubla.sambamusicplayer.smbutils.IFileOrFolderItem;
 import com.dvarubla.sambamusicplayer.smbutils.LocationData;
+import com.dvarubla.sambamusicplayer.toastman.IToastMan;
 
 import javax.inject.Inject;
 
@@ -20,6 +21,8 @@ public class FileListPresenter implements IFileListPresenter {
     private IFileListView _view;
     @Inject
     IFileListModel _model;
+    @Inject
+    IToastMan _toastMan;
 
     @Inject
     FileListPresenter(IFileListCtrl fileListCtrl){
@@ -62,6 +65,7 @@ public class FileListPresenter implements IFileListPresenter {
             }
         });
         setViewListeners(view);
+        _model.onFileAdded().subscribe(str -> _toastMan.showFileAdded(str));
     }
 
     private Maybe<IFileOrFolderItem[]> getLoginAndPass(){

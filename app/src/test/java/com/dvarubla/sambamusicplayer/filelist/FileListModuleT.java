@@ -1,6 +1,7 @@
 package com.dvarubla.sambamusicplayer.filelist;
 
 import com.dvarubla.sambamusicplayer.PerActivity;
+import com.dvarubla.sambamusicplayer.toastman.IToastMan;
 
 import org.mockito.Mockito;
 
@@ -20,5 +21,11 @@ public class FileListModuleT {
     @Provides
     IFileListView view(){
         return Mockito.mock(IFileListView.class);
+    }
+
+    @PerActivity
+    @Provides
+    IToastMan toastMan(){
+        return Mockito.mock(IToastMan.class);
     }
 }

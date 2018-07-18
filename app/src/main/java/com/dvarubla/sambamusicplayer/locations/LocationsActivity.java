@@ -12,7 +12,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.dvarubla.sambamusicplayer.Application;
 import com.dvarubla.sambamusicplayer.ItemSingleton;
@@ -176,11 +175,6 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
         _backClickedSubj.onNext(new Object());
         invalidateOptionsMenu();
         getSupportFragmentManager().popBackStack();
-    }
-
-    @Override
-    public void showSettingsSaved() {
-        Toast.makeText(this, R.string.settings_saved, Toast.LENGTH_SHORT).show();
     }
 
     @Override

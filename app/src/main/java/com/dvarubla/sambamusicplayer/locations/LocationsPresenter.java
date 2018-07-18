@@ -3,12 +3,15 @@ package com.dvarubla.sambamusicplayer.locations;
 import android.annotation.SuppressLint;
 
 import com.dvarubla.sambamusicplayer.settings.ISettings;
+import com.dvarubla.sambamusicplayer.toastman.IToastMan;
 
 import javax.inject.Inject;
 
 import dagger.Lazy;
 
 public class LocationsPresenter implements ILocationsPresenter {
+    @Inject
+    IToastMan _toastMan;
     @Inject
     Lazy<ILocationsEditableCtrl> _edLocComponent;
     @Inject
@@ -48,7 +51,7 @@ public class LocationsPresenter implements ILocationsPresenter {
                 String [] locations = _edLocComponent.get().getStrings();
                 _fixedLocComponent.setStrings(locations);
                 _settings.saveLocations(locations);
-                _view.showSettingsSaved();
+                _toastMan.showSettingsSaved();
         });
 
         _view.addClicked().subscribe(o -> _edLocComponent.get().addNewString(""));

@@ -43,6 +43,7 @@ public class FileListPresenterClickT {
     }
 
     private void prepare(){
+        when(_model.onFileAdded()).thenReturn(Observable.empty());
         when(_view.onFlingLeft()).thenReturn(Observable.empty());
         when(_view.onFlingRight()).thenReturn(Observable.empty());
         _presenter.init(_view, "TEST/test/dir");

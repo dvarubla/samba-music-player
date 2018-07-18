@@ -2,6 +2,7 @@ package com.dvarubla.sambamusicplayer.locations;
 
 import com.dvarubla.sambamusicplayer.PerActivity;
 import com.dvarubla.sambamusicplayer.settings.ISettings;
+import com.dvarubla.sambamusicplayer.toastman.IToastMan;
 
 import org.mockito.Mockito;
 
@@ -39,5 +40,11 @@ public class LocationsModuleT{
     @PerActivity
     @Provides @Named("LocationsFixedClickSubj") static PublishSubject<String> getLocFixSubj(){
         return _clickedSubj;
+    }
+
+    @PerActivity
+    @Provides
+    public IToastMan getToastMan(){
+        return Mockito.mock(IToastMan.class);
     }
 }

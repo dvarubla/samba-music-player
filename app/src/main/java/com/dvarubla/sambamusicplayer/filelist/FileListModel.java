@@ -84,4 +84,9 @@ public class FileListModel implements IFileListModel {
     public void setPrevious() {
         _playlist.playPrev();
     }
+
+    @Override
+    public Observable<String> onFileAdded() {
+        return _playlist.onFileAdded();
+    }
 }
