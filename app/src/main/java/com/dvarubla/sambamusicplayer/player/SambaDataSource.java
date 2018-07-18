@@ -68,7 +68,11 @@ class SambaDataSource implements DataSource{
                 readLength -= delta;
                 prevRead = delta;
             }
-            _buffer.size = _strm.read(_buffer.buffer, 0, BUFFER_SIZE).blockingGet();
+            try {
+                _buffer.size = _strm.read(_buffer.buffer, 0, BUFFER_SIZE).blockingGet();
+            } catch (RuntimeException ex){
+                _buffer.size = -1;
+            }
             if(_buffer.size == -1){
                 if(delta != 0){
                     return delta;
