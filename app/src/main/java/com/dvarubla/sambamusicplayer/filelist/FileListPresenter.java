@@ -33,7 +33,6 @@ public class FileListPresenter implements IFileListPresenter {
     @Override
     public void setView(final IFileListView view) {
         _view = view;
-        _model.setLocationData(_rootLocationData);
         _repeatSubj.onNext(new Object());
         setViewListeners(view);
     }

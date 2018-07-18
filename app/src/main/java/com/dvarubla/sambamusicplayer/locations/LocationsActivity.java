@@ -42,6 +42,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_locations);
+        Application.processAppActivity(this);
     }
 
     @Override
