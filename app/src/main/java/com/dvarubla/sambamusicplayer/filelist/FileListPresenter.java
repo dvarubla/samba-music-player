@@ -66,6 +66,7 @@ public class FileListPresenter implements IFileListPresenter {
         });
         setViewListeners(view);
         _model.onFileAdded().subscribe(str -> _toastMan.showFileAdded(str));
+        _model.onFilePlaying().subscribe(str -> _toastMan.showFilePlaying(str));
     }
 
     private Maybe<IFileOrFolderItem[]> getLoginAndPass(){

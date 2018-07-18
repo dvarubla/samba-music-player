@@ -89,4 +89,9 @@ public class FileListModel implements IFileListModel {
     public Observable<String> onFileAdded() {
         return _playlist.onFileAdded();
     }
+
+    @Override
+    public Observable<String> onFilePlaying() {
+        return _playlist.onFilePlaying();
+    }
 }

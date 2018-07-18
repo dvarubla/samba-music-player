@@ -16,4 +16,5 @@ public interface IFileListModel {
     void setNext();
     void setPrevious();
     Observable<String> onFileAdded();
+    Observable<String> onFilePlaying();
 }

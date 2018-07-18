@@ -22,6 +22,7 @@ public class Playlist implements IPlaylist{
     private ISmbUtils _smbUtils;
     private ArrayList<LocationData> _uris;
     private PublishSubject<LocationData> _playSubj;
+    private PublishSubject<String> _playingSubj;
     private PublishSubject<String> _addedSubj;
     private int _curIndex;
 
@@ -35,6 +36,7 @@ public class Playlist implements IPlaylist{
         _uris = new ArrayList<>();
         _playSubj = PublishSubject.create();
         _addedSubj = PublishSubject.create();
+        _playingSubj = PublishSubject.create();
         _playSubj.observeOn(Schedulers.io()).concatMap(data -> _smbUtils.getFileStream(data, _lpman.getLoginPass(data)).toObservable().
                 observeOn(Schedulers.io()).map(
                 strm -> {
@@ -64,6 +66,11 @@ public class Playlist implements IPlaylist{
     }
 
     @Override
+    public Observable<String> onFilePlaying() {
+        return _playingSubj;
+    }
+
+    @Override
     public synchronized void addFileAndPlay(LocationData uri) {
         _uris.add(uri);
         _addedSubj.onNext(getFileName(uri));
@@ -74,6 +81,7 @@ public class Playlist implements IPlaylist{
     public synchronized void playNext() {
         if (_curIndex != _uris.size() - 1) {
             _curIndex++;
+            _playingSubj.onNext(getFileName(_uris.get(_curIndex)));
             _playSubj.onNext(_uris.get(_curIndex));
         }
     }
@@ -82,6 +90,7 @@ public class Playlist implements IPlaylist{
     public synchronized void playPrev() {
         if(_curIndex != 0){
             _curIndex--;
+            _playingSubj.onNext(getFileName(_uris.get(_curIndex)));
             _playSubj.onNext(_uris.get(_curIndex));
         }
     }

@@ -31,4 +31,9 @@ public class ToastMan implements IToastMan{
     public void showFileAdded(String str) {
         showShortToast(_context.getString(R.string.file_was_added, str));
     }
+
+    @Override
+    public void showFilePlaying(String str) {
+        showShortToast(_context.getString(R.string.file_is_playing, str));
+    }
 }
