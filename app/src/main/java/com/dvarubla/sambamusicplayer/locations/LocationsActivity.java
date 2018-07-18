@@ -93,6 +93,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
             s.setItem(_locComp);
         }
         _presenter.setView(this);
+        _locComp.getToastManActivity().setActivity(this);
         super.onStart();
     }
 
@@ -103,6 +104,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
         _backClickedSubj.onComplete();
         _saveClickedSubj.onComplete();
         _addClickedSubj.onComplete();
+        _locComp.getToastManActivity().clearActivity(this);
         if(!_needSave){
             ItemSingleton.getInstance(LocationsComponent.class).removeItem();
         }

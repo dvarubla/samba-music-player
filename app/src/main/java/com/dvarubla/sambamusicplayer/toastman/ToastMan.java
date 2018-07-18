@@ -2,24 +2,57 @@ package com.dvarubla.sambamusicplayer.toastman;
 
 import android.content.Context;
 import android.support.annotation.StringRes;
-import android.widget.Toast;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.widget.TextView;
 
 import com.dvarubla.sambamusicplayer.R;
 
+import java.util.ArrayList;
+
 import javax.inject.Inject;
 
-public class ToastMan implements IToastMan{
+public class ToastMan implements IToastManActivity {
     @Inject
     Context _context;
+    private ArrayList<AppCompatActivity> _activities;
 
     @Inject
-    ToastMan(){}
+    ToastMan(){
+        _activities = new ArrayList<>();
+    }
 
     private void showShortToast(@StringRes int id){
-        Toast.makeText(_context, id, Toast.LENGTH_SHORT).show();
+        showShortToast(_context.getString(id));
     }
     private void showShortToast(String str){
-        Toast.makeText(_context, str, Toast.LENGTH_SHORT).show();
+        for(AppCompatActivity activity: _activities){
+            TextView tv = activity.findViewById(R.id.toast);
+            tv.setVisibility(View.VISIBLE);
+            tv.setText(str);
+            AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
+            anim.setDuration(1000);
+            anim.setStartOffset(2000);
+            anim.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    tv.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+            tv.startAnimation(anim);
+        }
     }
 
     @Override
@@ -35,5 +68,15 @@ public class ToastMan implements IToastMan{
     @Override
     public void showFilePlaying(String str) {
         showShortToast(_context.getString(R.string.file_is_playing, str));
+    }
+
+    public void setActivity(AppCompatActivity activity){
+        _activities.add(activity);
+        TextView tv = activity.findViewById(R.id.toast);
+        tv.setVisibility(View.GONE);
+    }
+
+    public void clearActivity(AppCompatActivity activity){
+        _activities.remove(activity);
     }
 }

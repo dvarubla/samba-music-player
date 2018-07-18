@@ -143,6 +143,7 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
         if(!firstTime){
             _presenter.setView(this);
         }
+        comp.getToastManActivity().setActivity(this);
         super.onStart();
     }
 
@@ -155,6 +156,7 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
     @Override
     public void onStop(){
         super.onStop();
+        ItemSingleton.getInstance(FileListComponent.class).getItem().getToastManActivity().clearActivity(this);
         if(!_needSave){
             ItemSingleton.getInstance(FileListComponent.class).removeItem();
         }

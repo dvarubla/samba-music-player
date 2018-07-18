@@ -7,10 +7,15 @@ import dagger.Provides;
 
 @Module
 public class ToastManModule {
+    @PerApplication
+    @Provides
+    IToastManActivity getToastManActivity(ToastMan tm){
+        return tm;
+    }
 
     @PerApplication
     @Provides
-    IToastMan getToastMan(ToastMan tm){
+    IToastMan getToastMan(IToastManActivity tm){
         return tm;
     }
 }

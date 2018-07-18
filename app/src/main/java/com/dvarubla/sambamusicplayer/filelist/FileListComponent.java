@@ -2,6 +2,7 @@ package com.dvarubla.sambamusicplayer.filelist;
 
 import com.dvarubla.sambamusicplayer.ApplicationComponent;
 import com.dvarubla.sambamusicplayer.PerActivity;
+import com.dvarubla.sambamusicplayer.toastman.IToastManActivity;
 
 import dagger.Component;
 
@@ -13,4 +14,5 @@ import dagger.Component;
 public interface FileListComponent {
     void inject(FileListActivity activity);
     FileListCtrl getFileListCtrl();
+    IToastManActivity getToastManActivity();
 }

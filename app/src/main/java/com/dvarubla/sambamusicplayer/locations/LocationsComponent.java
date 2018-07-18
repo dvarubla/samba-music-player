@@ -2,6 +2,7 @@ package com.dvarubla.sambamusicplayer.locations;
 
 import com.dvarubla.sambamusicplayer.ApplicationComponent;
 import com.dvarubla.sambamusicplayer.PerActivity;
+import com.dvarubla.sambamusicplayer.toastman.IToastManActivity;
 
 import dagger.Component;
 
@@ -12,5 +13,6 @@ public interface LocationsComponent {
     LocationsFixedFragment getFixedFragment();
     LocationsFixedCtrl getFixedCtrl();
     LocationsEditableCtrl getEditableCtrl();
+    IToastManActivity getToastManActivity();
     void inject(LocationsActivity activity);
 }

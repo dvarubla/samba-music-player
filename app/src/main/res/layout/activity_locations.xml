@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:theme="@style/AppTheme"
-    tools:context=".locations.LocationsActivity" android:id="@+id/locations_layout">
+    tools:context=".locations.LocationsActivity"
+    android:id="@+id/locations_layout">
     <LinearLayout
         android:focusable="true"
         android:focusableInTouchMode="true"
@@ -12,4 +14,13 @@
         android:layout_width="0px"
         android:layout_height="0px"
         tools:ignore="UselessLeaf" />
+    <include layout="@layout/toast"
+        android:id="@+id/toast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/locations_layout"
+        app:layout_constraintLeft_toLeftOf="@+id/locations_layout"
+        app:layout_constraintRight_toRightOf="@+id/locations_layout"
+        android:layout_marginBottom="20dp"
+        />
 </android.support.constraint.ConstraintLayout>

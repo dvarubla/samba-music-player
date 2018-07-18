@@ -3,10 +3,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:theme="@style/AppThemeNoTitle"
-    tools:context=".filelist.FileListActivity" android:id="@+id/filelist_layout">
+    tools:context=".filelist.FileListActivity"
+    android:id="@+id/filelist_layout">
     <android.support.v7.widget.RecyclerView
         android:id="@+id/filelist_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <include layout="@layout/toast"
+        android:id="@+id/toast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@id/filelist_layout"
+        app:layout_constraintLeft_toLeftOf="@id/filelist_layout"
+        app:layout_constraintRight_toRightOf="@id/filelist_layout"
+        android:layout_marginBottom="20dp"
+        />
 </android.support.constraint.ConstraintLayout>

@@ -12,6 +12,7 @@ import com.dvarubla.sambamusicplayer.settings.SettingsModule;
 import com.dvarubla.sambamusicplayer.smbutils.ISmbUtils;
 import com.dvarubla.sambamusicplayer.smbutils.SmbUtilsModule;
 import com.dvarubla.sambamusicplayer.toastman.IToastMan;
+import com.dvarubla.sambamusicplayer.toastman.IToastManActivity;
 import com.dvarubla.sambamusicplayer.toastman.ToastManModule;
 
 import dagger.BindsInstance;
@@ -28,6 +29,7 @@ public interface ApplicationComponent {
     IPlaylist getPlaylist();
     ILoginPassMan getLoginPassMan();
     IToastMan getToastMan();
+    IToastManActivity getToastManActivity();
 
     @Component.Builder
     interface Builder {
