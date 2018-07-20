@@ -110,6 +110,8 @@ public class SmbUtils implements ISmbUtils {
                         }
                     }
                 }
+                Collections.sort(dirData, (it1, it2) -> it1.getName().compareTo(it2.getName()));
+                Collections.sort(fileData, (it1, it2) -> it1.getName().compareTo(it2.getName()));
                 dirData.addAll(fileData);
                 subj.onSuccess(dirData.toArray(new IFileOrFolderItem[0]));
             } catch (SMBApiException exc){
