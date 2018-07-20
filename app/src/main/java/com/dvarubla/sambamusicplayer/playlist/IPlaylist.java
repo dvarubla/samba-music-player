@@ -6,7 +6,6 @@ import io.reactivex.Observable;
 
 public interface IPlaylist {
     void addFile(LocationData uri);
-    void addFileAndPlay(LocationData uri);
     Observable<String> onFileAdded();
     Observable<String> onFilePlaying();
     void playNext();

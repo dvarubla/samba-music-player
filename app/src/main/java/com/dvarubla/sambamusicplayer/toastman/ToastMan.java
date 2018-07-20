@@ -14,6 +14,9 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+
 public class ToastMan implements IToastManActivity {
     @Inject
     Context _context;
@@ -28,31 +31,34 @@ public class ToastMan implements IToastManActivity {
         showShortToast(_context.getString(id));
     }
     private void showShortToast(String str){
-        for(AppCompatActivity activity: _activities){
-            TextView tv = activity.findViewById(R.id.toast);
-            tv.setVisibility(View.VISIBLE);
-            tv.setText(str);
-            AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
-            anim.setDuration(1000);
-            anim.setStartOffset(2000);
-            anim.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
+        Observable.fromCallable( () -> {
+            for (AppCompatActivity activity : _activities) {
+                TextView tv = activity.findViewById(R.id.toast);
+                tv.setVisibility(View.VISIBLE);
+                tv.setText(str);
+                AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
+                anim.setDuration(1000);
+                anim.setStartOffset(2000);
+                anim.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
 
-                }
+                    }
 
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    tv.setVisibility(View.GONE);
-                }
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        tv.setVisibility(View.GONE);
+                    }
 
-                @Override
-                public void onAnimationRepeat(Animation animation) {
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
 
-                }
-            });
-            tv.startAnimation(anim);
-        }
+                    }
+                });
+                tv.startAnimation(anim);
+            }
+            return new Object();
+        }).subscribeOn(AndroidSchedulers.mainThread()).subscribe();
     }
 
     @Override
