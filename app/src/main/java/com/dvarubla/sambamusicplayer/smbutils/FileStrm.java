@@ -1,5 +1,6 @@
 package com.dvarubla.sambamusicplayer.smbutils;
 
+import com.dvarubla.sambamusicplayer.Util;
 import com.hierynomus.smbj.common.SMBRuntimeException;
 import com.hierynomus.smbj.share.File;
 
@@ -28,10 +29,14 @@ public class FileStrm implements IFileStrm{
         _subj.onNext(Observable.fromCallable(() -> {
             int readLen;
             try {
-                 readLen = _file.read(buf, _offset, bufferOffset, len);
+                readLen = _file.read(buf, _offset, bufferOffset, len);
                 _offset += readLen;
             } catch (SMBRuntimeException ex){
-                readLen = 0;
+                if(Util.getCause(ex) instanceof InterruptedException){
+                    readLen = -1;
+                } else {
+                    throw ex;
+                }
             }
             subj.onSuccess(readLen);
             return new Object();
@@ -46,6 +51,9 @@ public class FileStrm implements IFileStrm{
 
     @Override
     public void close() {
-        _file.close();
+        try {
+            _file.close();
+        } catch (SMBRuntimeException ignored){
+        }
     }
 }
