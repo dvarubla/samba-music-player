@@ -3,14 +3,22 @@ package com.dvarubla.sambamusicplayer.player;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
+import android.os.RemoteException;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 
 import com.dvarubla.sambamusicplayer.smbutils.IFileStrm;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.TrackGroup;
+import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 
 import javax.inject.Inject;
@@ -23,14 +31,28 @@ import io.reactivex.subjects.SingleSubject;
 
 import static com.google.android.exoplayer2.Player.DISCONTINUITY_REASON_PERIOD_TRANSITION;
 import static com.google.android.exoplayer2.Player.STATE_ENDED;
+import static com.google.android.exoplayer2.Player.STATE_READY;
 
 public class Player implements IPlayer {
     Context _context;
+
+    private final PlaybackStateCompat.Builder _stateBuilder = new PlaybackStateCompat.Builder().setActions(
+            PlaybackStateCompat.ACTION_PLAY
+                    | PlaybackStateCompat.ACTION_STOP
+                    | PlaybackStateCompat.ACTION_PAUSE
+                    | PlaybackStateCompat.ACTION_PLAY_PAUSE
+                    | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                    | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+    );
+
+    private MediaSessionCompat _mediaSession;
+    private MediaControllerCompat _controller;
 
     private ExoPlayer _player;
     private PublishSubject<Object> _needNextSubj;
     private ConcatenatingMediaSource _concatSrc;
     private boolean _firstStopHandled;
+    private SongMData _songMData;
 
     @Inject
     Player(Context context){
@@ -43,7 +65,7 @@ public class Player implements IPlayer {
         _player.prepare(_concatSrc);
         _player.setPlayWhenReady(true);
         _firstStopHandled = false;
-        com.google.android.exoplayer2.Player.EventListener _listener = new com.google.android.exoplayer2.Player.DefaultEventListener() {
+        com.google.android.exoplayer2.Player.EventListener eventListener = new com.google.android.exoplayer2.Player.DefaultEventListener() {
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 if (playbackState == STATE_ENDED) {
@@ -52,6 +74,9 @@ public class Player implements IPlayer {
                     } else {
                         _firstStopHandled = true;
                     }
+                } else if(playbackState == STATE_READY){
+                    getMetadata();
+                    _controller.getTransportControls().play();
                 }
                 super.onPlayerStateChanged(playWhenReady, playbackState);
             }
@@ -60,11 +85,81 @@ public class Player implements IPlayer {
             public void onPositionDiscontinuity(int reason) {
                 if (reason == DISCONTINUITY_REASON_PERIOD_TRANSITION) {
                     _needNextSubj.onNext(new Object());
+                    getMetadata();
+                    _controller.getTransportControls().play();
                 }
                 super.onPositionDiscontinuity(reason);
             }
         };
-        _player.addListener(_listener);
+        _player.addListener(eventListener);
+
+        _mediaSession = new MediaSessionCompat(_context, "Samba Music Player");
+        _mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        _mediaSession.setCallback(new MediaSessionCompat.Callback() {
+            @Override
+            public void onPlay() {
+                if(_songMData != null) {
+                    MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
+                    metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, _songMData.getTrackName());
+                    metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, _songMData.getArtist());
+                    if(_songMData.getAlbum() != null){
+                        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, _songMData.getAlbum());
+                    }
+                    metadataBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, _songMData.getDuration());
+                    _mediaSession.setMetadata(metadataBuilder.build());
+                }
+                _mediaSession.setActive(true);
+                _mediaSession.setPlaybackState(
+                        _stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build()
+                );
+            }
+
+            @Override
+            public void onStop() {
+                _mediaSession.setActive(false);
+                _mediaSession.setPlaybackState(_stateBuilder.setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
+            }
+        });
+        try {
+            _controller = new MediaControllerCompat(_context, _mediaSession.getSessionToken());
+        } catch (RemoteException ignored) {
+        }
+    }
+
+    private void getMetadata(){
+        TrackGroupArray trackGroups = _player.getCurrentTrackGroups();
+        Metadata mdata = null;
+        for (int i = 0; i < trackGroups.length; i++) {
+            TrackGroup group = trackGroups.get(i);
+            for (int j = 0; j < group.length; j++) {
+                mdata = group.getFormat(j).metadata;
+                if (mdata != null) {
+                    break;
+                }
+            }
+            if (mdata != null) {
+                break;
+            }
+        }
+        if (mdata != null) {
+            String artist = null;
+            String trackName = null;
+            String album = null;
+            for (int i = 0; i < mdata.length(); i++) {
+                String str = mdata.get(i).toString();
+                if (str.startsWith("TIT2:")) {
+                    trackName = str.substring(str.indexOf('=') + 1);
+                } else if (str.startsWith("TPE1:")) {
+                    artist = str.substring(str.indexOf('=') + 1);
+                } else if (str.startsWith("TALB:")){
+                    album = str.substring(str.indexOf('=') + 1);
+                }
+            }
+            if (artist != null && trackName != null) {
+                long dur = _player.getDuration();
+                _songMData = new SongMData(artist, trackName, album, dur);
+            }
+        }
     }
 
     private MediaSource createMediaSource(String ext, IFileStrm strm){
@@ -112,4 +207,6 @@ public class Player implements IPlayer {
         _player.prepare(_concatSrc, true, true);
         _player.setPlayWhenReady(true);
     }
+
+
 }
