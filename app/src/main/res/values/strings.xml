@@ -3,6 +3,7 @@
     <string name="settings_saved">Settings were saved</string>
     <string name="edit">Edit</string>
     <string name="locations">Locations</string>
+    <string name="settings">Settings</string>
     <string name="file_was_added">%1$s was added</string>
     <string name="file_is_playing">%1$s is playing</string>
     <string name="enter_server_login_pass">Enter %1$s login and password:</string>

@@ -17,6 +17,7 @@ import com.dvarubla.sambamusicplayer.Application;
 import com.dvarubla.sambamusicplayer.ItemSingleton;
 import com.dvarubla.sambamusicplayer.R;
 import com.dvarubla.sambamusicplayer.filelist.FileListActivity;
+import com.dvarubla.sambamusicplayer.simplepreferences.PreferencesActivity;
 
 import javax.inject.Inject;
 
@@ -37,6 +38,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     private PublishSubject<Object> _saveClickedSubj;
     private PublishSubject<Object> _backClickedSubj;
     private PublishSubject<Object> _addClickedSubj;
+    private PublishSubject<Object> _settingsClickedSubj;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
             inflater.inflate(R.menu.save_button, menu);
         } else {
             inflater.inflate(R.menu.edit_button, menu);
+            inflater.inflate(R.menu.settings_button, menu);
             setTitle(R.string.locations);
         }
         return true;
@@ -72,6 +75,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
         _backClickedSubj = PublishSubject.create();
         _saveClickedSubj = PublishSubject.create();
         _addClickedSubj = PublishSubject.create();
+        _settingsClickedSubj = PublishSubject.create();
         ItemSingleton<LocationsComponent> s = ItemSingleton.getInstance(LocationsComponent.class);
         if(s.hasItem()){
             _locComp = s.getItem();
@@ -104,6 +108,7 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
         _backClickedSubj.onComplete();
         _saveClickedSubj.onComplete();
         _addClickedSubj.onComplete();
+        _settingsClickedSubj.onComplete();
         _locComp.getToastManActivity().clearActivity(this);
         if(!_needSave){
             ItemSingleton.getInstance(LocationsComponent.class).removeItem();
@@ -121,6 +126,9 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
                 break;
             case R.id.add_location:
                 _addClickedSubj.onNext(new Object());
+                break;
+            case R.id.settings:
+                _settingsClickedSubj.onNext(new Object());
                 break;
         }
         return true;
@@ -168,9 +176,20 @@ public class LocationsActivity extends AppCompatActivity implements ILocationsVi
     }
 
     @Override
+    public Observable<Object> settingsClicked() {
+        return _settingsClickedSubj;
+    }
+
+    @Override
     public void showFileList(String str) {
         Intent intent = new Intent(this, FileListActivity.class);
         intent.putExtra(LOCATION_NAME, str);
+        startActivity(intent);
+    }
+
+    @Override
+    public void showSettings() {
+        Intent intent = new Intent(this, PreferencesActivity.class);
         startActivity(intent);
     }
 

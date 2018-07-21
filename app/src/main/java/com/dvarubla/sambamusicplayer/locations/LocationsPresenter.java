@@ -55,5 +55,7 @@ public class LocationsPresenter implements ILocationsPresenter {
         });
 
         _view.addClicked().subscribe(o -> _edLocComponent.get().addNewString(""));
+
+        _view.settingsClicked().subscribe(o -> _view.showSettings());
     }
 }

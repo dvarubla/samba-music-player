@@ -19,6 +19,7 @@
             </intent-filter>
         </activity>
         <activity android:theme="@style/AppThemeNoTitle" android:name=".filelist.FileListActivity" />
+        <activity android:name=".simplepreferences.PreferencesActivity" />
     </application>
 
 </manifest>
