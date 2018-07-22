@@ -137,8 +137,11 @@ public class Player implements IPlayer {
         _mediaSession = new MediaSessionCompat(_context, "Samba Music Player");
         _mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         _mediaSession.setCallback(new MediaSessionCompat.Callback() {
+            private boolean _registered = false;
             @Override
             public void onPlay() {
+                _context.registerReceiver(becomingNoisyReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
+                _registered = true;
                 if(_songMData != null) {
                     MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
                     metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, _songMData.getTrackName());
@@ -157,6 +160,11 @@ public class Player implements IPlayer {
 
             @Override
             public void onStop() {
+                _audioManager.abandonAudioFocus(audioFocusChangeListener);
+                if(_registered) {
+                    _context.unregisterReceiver(becomingNoisyReceiver);
+                    _registered = false;
+                }
                 _mediaSession.setActive(false);
                 _mediaSession.setPlaybackState(_stateBuilder.setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
             }
@@ -176,23 +184,20 @@ public class Player implements IPlayer {
             _player.setPlayWhenReady(false);
             return new Object();
         }));
-        _context.unregisterReceiver(becomingNoisyReceiver);
     }
 
     @Override
-    public boolean play() {
-        if(_audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
-                != AUDIOFOCUS_REQUEST_GRANTED
-        ){
-            return false;
-        } else {
-            runOnHandlerThread(Observable.fromCallable(() -> {
-                _player.setPlayWhenReady(true);
-                return new Object();
-            }));
-            _context.registerReceiver(becomingNoisyReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
-            return true;
-        }
+    public boolean canPlay() {
+        return _audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+                == AUDIOFOCUS_REQUEST_GRANTED;
+    }
+
+    @Override
+    public void play() {
+        runOnHandlerThread(Observable.fromCallable(() -> {
+            _player.setPlayWhenReady(true);
+            return new Object();
+        }));
     }
 
     private void getMetadata(){

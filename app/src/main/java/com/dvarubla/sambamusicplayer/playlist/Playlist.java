@@ -55,7 +55,7 @@ public class Playlist implements IPlaylist{
             }).doFinally(() -> _numTasks.decrementAndGet()));
         } else {
             _quantumSubj.onNext(Observable.<Observable<Object>>create(emitter -> {
-                if(_player.play()) {
+                if(_player.canPlay()) {
                     _isPlaying.set(true);
                     if (_needClearWhenPlayed) {
                         clear();
@@ -68,6 +68,7 @@ public class Playlist implements IPlaylist{
                             addItem(emitter, _uris.get(_curIndex + 1));
                         }
                     }
+                    _player.play();
                 } else {
                     _onStopSubj.onNext(new Object());
                 }

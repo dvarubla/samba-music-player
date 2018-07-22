@@ -10,7 +10,8 @@ public interface IPlayer {
     Single<Object> removeFirst();
     void clear();
     void stop();
-    boolean play();
+    boolean canPlay();
+    void play();
     io.reactivex.Observable<Object> onNeedNext();
     void onExit();
     Observable<Object> onStop();
