@@ -82,6 +82,11 @@ public class ToastMan implements IToastManActivity {
         tv.setVisibility(View.GONE);
     }
 
+    @Override
+    public void showFileCurrent(String str) {
+        showShortToast(_context.getString(R.string.file_is_current, str));
+    }
+
     public void clearActivity(AppCompatActivity activity){
         _activities.remove(activity);
     }

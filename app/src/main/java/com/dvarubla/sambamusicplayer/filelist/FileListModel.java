@@ -101,6 +101,11 @@ public class FileListModel implements IFileListModel {
     }
 
     @Override
+    public Observable<String> onTrackChanged() {
+        return _playlist.onTrackChanged();
+    }
+
+    @Override
     public Observable<Object> onPlaylistStop() {
         return _playlist.onStop();
     }

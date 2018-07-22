@@ -4,4 +4,5 @@ public interface IToastMan {
     void showSettingsSaved();
     void showFileAdded(String str);
     void showFilePlaying(String str);
+    void showFileCurrent(String str);
 }

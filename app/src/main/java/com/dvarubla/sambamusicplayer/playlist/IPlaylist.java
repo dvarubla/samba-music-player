@@ -8,6 +8,7 @@ public interface IPlaylist {
     void addFile(LocationData uri);
     Observable<String> onFileAdded();
     Observable<String> onFilePlaying();
+    Observable<String> onTrackChanged();
     void playNext();
     void playPrev();
     void setPlaying(boolean playing);

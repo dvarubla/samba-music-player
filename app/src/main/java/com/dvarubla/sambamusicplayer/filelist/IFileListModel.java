@@ -17,6 +17,7 @@ public interface IFileListModel {
     void setPrevious();
     void setPlaying(boolean playing);
     Observable<String> onFileAdded();
+    Observable<String> onTrackChanged();
     Observable<String> onFilePlaying();
     Observable<Object> onPlaylistStop();
     boolean isPlaying();

@@ -28,6 +28,7 @@ public class Playlist implements IPlaylist{
     private ArrayList<LocationData> _uris;
     private PublishSubject<Observable> _quantumSubj;
     private PublishSubject<String> _playingSubj;
+    private PublishSubject<String> _trackChangedSubj;
     private PublishSubject<String> _addedSubj;
     private Subject<Object> _onStopSubj;
     private int _curIndex;
@@ -90,6 +91,7 @@ public class Playlist implements IPlaylist{
         _addedSubj = PublishSubject.create();
         _playingSubj = PublishSubject.create();
         _quantumSubj = PublishSubject.create();
+        _trackChangedSubj = PublishSubject.create();
         _onStopSubj = PublishSubject.create().toSerialized();
         _numTasks = new AtomicInteger(0);
 
@@ -128,9 +130,11 @@ public class Playlist implements IPlaylist{
         }
     }
 
-    private void setPlaying(int index){
+    private void setCurrent(int index){
         if(_isPlaying.get()) {
             _playingSubj.onNext(_uris.get(index).getLast());
+        } else {
+            _trackChangedSubj.onNext(_uris.get(index).getLast());
         }
     }
 
@@ -142,7 +146,7 @@ public class Playlist implements IPlaylist{
                         removeFirst(emitter);
                         if (_curIndex != _uris.size() - 1) {
                             _curIndex++;
-                            setPlaying(_curIndex);
+                            setCurrent(_curIndex);
                             if (_curIndex != _uris.size() - 1) {
                                 _numAdded++;
                                 addItem(emitter, _uris.get(_curIndex + 1));
@@ -184,6 +188,11 @@ public class Playlist implements IPlaylist{
     }
 
     @Override
+    public Observable<String> onTrackChanged() {
+        return _trackChangedSubj;
+    }
+
+    @Override
     public Observable<String> onFilePlaying() {
         return _playingSubj;
     }
@@ -196,7 +205,7 @@ public class Playlist implements IPlaylist{
                     if (_curIndex != _uris.size() - 1) {
                         _needClearWhenPlayed = true;
                         _curIndex++;
-                        setPlaying(_curIndex);
+                        setCurrent(_curIndex);
                         clear();
                         addItem(emitter, _uris.get(_curIndex));
                         if(_curIndex != _uris.size() - 1) {
@@ -217,7 +226,7 @@ public class Playlist implements IPlaylist{
                         _needClearWhenPlayed = true;
                         clear();
                         _curIndex--;
-                        setPlaying(_curIndex);
+                        setCurrent(_curIndex);
                         addItem(emitter, _uris.get(_curIndex));
                         if(_curIndex != _uris.size() - 1) {
                             addItem(emitter, _uris.get(_curIndex + 1));
