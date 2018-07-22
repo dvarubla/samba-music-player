@@ -40,8 +40,8 @@ public class Playlist implements IPlaylist{
     public void setPlaying(boolean playing) {
         _numTasks.incrementAndGet();
         if(!playing){
+            _player.stop();
             _quantumSubj.onNext(Observable.fromCallable(() -> {
-                _player.stop();
                 _needClearWhenPlayed = false;
                 _isPlaying = false;
                 return new Object();

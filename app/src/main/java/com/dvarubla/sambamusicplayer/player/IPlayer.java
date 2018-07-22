@@ -9,7 +9,6 @@ public interface IPlayer {
     Single<Object> addEnd(String name, IFileStrm strm);
     Single<Object> removeFirst();
     void clear();
-    boolean isStopped();
     void stop();
     boolean play();
     io.reactivex.Observable<Object> onNeedNext();

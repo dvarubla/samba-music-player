@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.HandlerThread;
 import android.os.RemoteException;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -26,6 +27,7 @@ import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.SingleSubject;
@@ -46,6 +48,7 @@ public class Player implements IPlayer {
                     | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
                     | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
     );
+    private HandlerThread _playerThread;
 
     private MediaSessionCompat _mediaSession;
     private MediaControllerCompat _controller;
@@ -65,18 +68,18 @@ public class Player implements IPlayer {
         }
     };
 
+    private void runOnHandlerThread(Observable<Object> obs){
+        obs.subscribeOn(AndroidSchedulers.from(_playerThread.getLooper())).blockingSubscribe();
+    }
+
     @Inject
     Player(Context context){
+        _playerThread = new HandlerThread("PlayerHandlerThread");
+        _playerThread.start();
         _context = context;
         _needNextSubj = PublishSubject.create();
         _onStopSubj = PublishSubject.create();
-        DefaultTrackSelector trackSelector =
-                new DefaultTrackSelector();
-        _player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
-        _concatSrc = new ConcatenatingMediaSource();
-        _player.prepare(_concatSrc);
-        _player.setPlayWhenReady(false);
-        _firstStopHandled = false;
+        createSessionStuff();
         com.google.android.exoplayer2.Player.EventListener eventListener = new com.google.android.exoplayer2.Player.DefaultEventListener() {
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
@@ -104,8 +107,20 @@ public class Player implements IPlayer {
                 super.onPositionDiscontinuity(reason);
             }
         };
-        _player.addListener(eventListener);
+        runOnHandlerThread(Observable.fromCallable(() -> {
+            DefaultTrackSelector trackSelector =
+                    new DefaultTrackSelector();
+            _player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
+            _concatSrc = new ConcatenatingMediaSource();
+            _player.prepare(_concatSrc);
+            _player.setPlayWhenReady(false);
+            _player.addListener(eventListener);
+            return new Object();
+        }));
+        _firstStopHandled = false;
+    }
 
+    private void createSessionStuff(){
         _mediaSession = new MediaSessionCompat(_context, "Samba Music Player");
         _mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         _mediaSession.setCallback(new MediaSessionCompat.Callback() {
@@ -144,7 +159,10 @@ public class Player implements IPlayer {
     @Override
     public void stop() {
         _controller.getTransportControls().stop();
-        _player.setPlayWhenReady(false);
+        runOnHandlerThread(Observable.fromCallable(() -> {
+            _player.setPlayWhenReady(false);
+            return new Object();
+        }));
     }
 
     @Override
@@ -154,7 +172,10 @@ public class Player implements IPlayer {
         ){
             return false;
         } else {
-            _player.setPlayWhenReady(true);
+            runOnHandlerThread(Observable.fromCallable(() -> {
+                _player.setPlayWhenReady(true);
+                return new Object();
+            }));
             return true;
         }
     }
@@ -207,7 +228,10 @@ public class Player implements IPlayer {
         SingleSubject<Object> subj = SingleSubject.create();
         _concatSrc.addMediaSource(createMediaSource(name, strm), () -> {
             if(_concatSrc.getSize() == 1){
-                _player.seekTo(0, C.TIME_UNSET);
+                runOnHandlerThread(Observable.fromCallable(() -> {
+                    _player.seekTo(0, C.TIME_UNSET);
+                    return new Object();
+                }));
             }
             subj.onSuccess(new Object());
         });
@@ -222,27 +246,25 @@ public class Player implements IPlayer {
     }
 
     @Override
-    public boolean isStopped(){
-        return _player.getPlayWhenReady();
-    }
-
-    @Override
     public Observable<Object> onNeedNext() {
         return _needNextSubj;
     }
 
     @Override
     public void clear() {
-        boolean needStop = _player.getPlayWhenReady();
-        if(needStop) {
-            _player.setPlayWhenReady(false);
-        }
-        _concatSrc = new ConcatenatingMediaSource();
-        _firstStopHandled = false;
-        _player.prepare(_concatSrc, true, true);
-        if(needStop) {
-            _player.setPlayWhenReady(true);
-        }
+        runOnHandlerThread(Observable.fromCallable(() -> {
+            boolean needStop = _player.getPlayWhenReady();
+            if (needStop) {
+                _player.setPlayWhenReady(false);
+            }
+            _concatSrc = new ConcatenatingMediaSource();
+            _firstStopHandled = false;
+            _player.prepare(_concatSrc, true, true);
+            if (needStop) {
+                _player.setPlayWhenReady(true);
+            }
+            return new Object();
+        }));
     }
 
     @Override
