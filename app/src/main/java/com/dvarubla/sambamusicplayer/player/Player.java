@@ -111,7 +111,7 @@ public class Player implements IPlayer {
                 }
                 _mediaSession.setActive(true);
                 _mediaSession.setPlaybackState(
-                        _stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build()
+                        _stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, _player.getCurrentPosition(), 1).build()
                 );
             }
 
@@ -129,6 +129,7 @@ public class Player implements IPlayer {
 
     @Override
     public void stop() {
+        _controller.getTransportControls().stop();
         _player.setPlayWhenReady(false);
     }
 
