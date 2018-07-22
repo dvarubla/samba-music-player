@@ -56,11 +56,14 @@ public class PlaylistBasicT {
         LoginPass testLoginPass = new LoginPass("Login", "Pass");
         LocationData fileLoc = new LocationData("TEST/test2/file.mp3");
         when(_player.onNeedNext()).thenReturn(Observable.empty());
+        when(_player.onStop()).thenReturn(Observable.empty());
+        when(_player.play()).thenReturn(true);
         when(_player.addEnd(any(), any())).thenReturn(Single.just(new Object()));
         when(_lpman.getLoginPass(fileLoc)).thenReturn(testLoginPass);
         when(_smbUtils.getFileStream(fileLoc, testLoginPass)).thenReturn(Maybe.just(_strm));
 
         _playlist = _comp.getPlaylist();
+        _playlist.setPlaying(true);
         _playlist.addFile(fileLoc);
         verify(_player, times(1)).addEnd("mp3", _strm);
     }
@@ -71,6 +74,8 @@ public class PlaylistBasicT {
         LocationData fileLoc = new LocationData("TEST/test2/file.mp3");
         LocationData fileLoc2 = new LocationData("TEST/test2/file2.mp3");
         when(_player.onNeedNext()).thenReturn(Observable.empty());
+        when(_player.onStop()).thenReturn(Observable.empty());
+        when(_player.play()).thenReturn(true);
         when(_player.addEnd(any(), any())).thenReturn(Single.just(new Object()));
         when(_lpman.getLoginPass(fileLoc)).thenReturn(testLoginPass);
         when(_lpman.getLoginPass(fileLoc2)).thenReturn(testLoginPass);
@@ -78,6 +83,7 @@ public class PlaylistBasicT {
         when(_smbUtils.getFileStream(fileLoc2, testLoginPass)).thenReturn(Maybe.just(_strm));
 
         _playlist = _comp.getPlaylist();
+        _playlist.setPlaying(true);
         _playlist.addFile(fileLoc);
         _playlist.addFile(fileLoc2);
         verify(_player, times(2)).addEnd("mp3", _strm);
@@ -89,6 +95,8 @@ public class PlaylistBasicT {
         LocationData fileLoc = new LocationData("TEST/test2/file.mp3");
         LocationData fileLoc2 = new LocationData("TEST/test2/file2.wav");
         when(_player.onNeedNext()).thenReturn(Observable.empty());
+        when(_player.onStop()).thenReturn(Observable.empty());
+        when(_player.play()).thenReturn(true);
         when(_player.addEnd(any(), any())).thenReturn(Single.just(new Object()));
         when(_lpman.getLoginPass(fileLoc)).thenReturn(testLoginPass);
         when(_lpman.getLoginPass(fileLoc2)).thenReturn(testLoginPass);
@@ -96,6 +104,7 @@ public class PlaylistBasicT {
         when(_smbUtils.getFileStream(fileLoc2, testLoginPass)).thenReturn(Maybe.just(_strm));
 
         _playlist = _comp.getPlaylist();
+        _playlist.setPlaying(true);
         _playlist.addFile(fileLoc);
         _playlist.addFile(fileLoc2);
         _playlist.playNext();
@@ -113,6 +122,8 @@ public class PlaylistBasicT {
         LocationData fileLoc = new LocationData("TEST/test2/file.mp3");
         LocationData fileLoc2 = new LocationData("TEST/test2/file2.wav");
         when(_player.onNeedNext()).thenReturn(Observable.empty());
+        when(_player.onStop()).thenReturn(Observable.empty());
+        when(_player.play()).thenReturn(true);
         when(_player.addEnd(any(), any())).thenReturn(Single.just(new Object()));
         when(_lpman.getLoginPass(fileLoc)).thenReturn(testLoginPass);
         when(_lpman.getLoginPass(fileLoc2)).thenReturn(testLoginPass);
@@ -120,6 +131,7 @@ public class PlaylistBasicT {
         when(_smbUtils.getFileStream(fileLoc2, testLoginPass)).thenReturn(Maybe.just(_strm));
 
         _playlist = _comp.getPlaylist();
+        _playlist.setPlaying(true);
         _playlist.addFile(fileLoc);
         _playlist.addFile(fileLoc2);
         _playlist.playNext();
@@ -141,6 +153,8 @@ public class PlaylistBasicT {
         LocationData fileLoc2 = new LocationData("TEST/test2/file2.wav");
         PublishSubject<Object> _stopSubj = PublishSubject.create();
         when(_player.onNeedNext()).thenReturn(_stopSubj);
+        when(_player.play()).thenReturn(true);
+        when(_player.onStop()).thenReturn(Observable.empty());
         when(_player.addEnd(any(), any())).thenReturn(Single.just(new Object()));
         when(_player.removeFirst()).thenReturn(Single.just(new Object()));
         when(_lpman.getLoginPass(fileLoc)).thenReturn(testLoginPass);
@@ -149,6 +163,7 @@ public class PlaylistBasicT {
         when(_smbUtils.getFileStream(fileLoc2, testLoginPass)).thenReturn(Maybe.just(_strm));
 
         _playlist = _comp.getPlaylist();
+        _playlist.setPlaying(true);
         _playlist.addFile(fileLoc);
         _playlist.addFile(fileLoc2);
         _stopSubj.onNext(new Object());
