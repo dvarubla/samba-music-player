@@ -1,7 +1,10 @@
 package com.dvarubla.sambamusicplayer.player;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.HandlerThread;
@@ -65,6 +68,16 @@ public class Player implements IPlayer {
         if(focusChange != AudioManager.AUDIOFOCUS_GAIN){
             _controller.getTransportControls().stop();
             _onStopSubj.onNext(new Object());
+        }
+    };
+
+    private final BroadcastReceiver becomingNoisyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+                _controller.getTransportControls().stop();
+                _onStopSubj.onNext(new Object());
+            }
         }
     };
 
@@ -163,6 +176,7 @@ public class Player implements IPlayer {
             _player.setPlayWhenReady(false);
             return new Object();
         }));
+        _context.unregisterReceiver(becomingNoisyReceiver);
     }
 
     @Override
@@ -176,6 +190,7 @@ public class Player implements IPlayer {
                 _player.setPlayWhenReady(true);
                 return new Object();
             }));
+            _context.registerReceiver(becomingNoisyReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
             return true;
         }
     }
