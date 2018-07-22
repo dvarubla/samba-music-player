@@ -2,6 +2,7 @@ package com.dvarubla.sambamusicplayer;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
@@ -29,6 +30,11 @@ public class Application extends android.support.multidex.MultiDexApplication {
             _wakeLock.acquire();
         }
         _settingsComp = DaggerApplicationComponent.builder().setContext(getApplicationContext()).build();
+        startService(new Intent(getApplicationContext(), ExitService.class));
+    }
+
+    static void onExit(){
+        _settingsComp.getPlayer().onExit();
     }
 
     public static ApplicationComponent getComponent() {

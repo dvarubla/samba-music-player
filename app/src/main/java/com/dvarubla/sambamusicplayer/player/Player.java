@@ -208,5 +208,8 @@ public class Player implements IPlayer {
         _player.setPlayWhenReady(true);
     }
 
-
+    @Override
+    public void onExit() {
+        _controller.getTransportControls().stop();
+    }
 }

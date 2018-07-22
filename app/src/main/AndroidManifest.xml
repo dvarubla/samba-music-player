@@ -20,6 +20,9 @@
         </activity>
         <activity android:theme="@style/AppThemeNoTitle" android:name=".filelist.FileListActivity" />
         <activity android:name=".simplepreferences.PreferencesActivity" />
+        <service
+            android:name="com.dvarubla.sambamusicplayer.ExitService"
+            android:stopWithTask="false" />
     </application>
 
 </manifest>

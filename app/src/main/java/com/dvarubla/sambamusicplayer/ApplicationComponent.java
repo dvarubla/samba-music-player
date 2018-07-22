@@ -2,6 +2,7 @@ package com.dvarubla.sambamusicplayer;
 
 import android.content.Context;
 
+import com.dvarubla.sambamusicplayer.player.IPlayer;
 import com.dvarubla.sambamusicplayer.player.PlayerModule;
 import com.dvarubla.sambamusicplayer.playlist.IPlaylist;
 import com.dvarubla.sambamusicplayer.playlist.PlaylistModule;
@@ -24,6 +25,7 @@ import dagger.Component;
         PlaylistModule.class, LoginPassModule.class, ToastManModule.class
 })
 public interface ApplicationComponent {
+    IPlayer getPlayer();
     ISettings getSettings();
     ISmbUtils getSmbUtils();
     IPlaylist getPlaylist();
