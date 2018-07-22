@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
 
+import io.reactivex.Emitter;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -28,12 +29,39 @@ public class Playlist implements IPlaylist{
     private PublishSubject<String> _addedSubj;
     private int _curIndex;
     private boolean _stopped;
+    private boolean _isPlaying;
     private int _numAdded;
     private AtomicInteger _numTasks;
+
+    @Override
+    public void setPlaying(boolean playing) {
+        if(!playing){
+            _quantumSubj.onNext(Observable.fromCallable(() -> {
+                clear();
+                _isPlaying = false;
+                return new Object();
+            }));
+        } else {
+            _numTasks.incrementAndGet();
+            _quantumSubj.onNext(Observable.<Observable<Object>>create(emitter -> {
+                clear();
+                _isPlaying = true;
+                if(_curIndex != _uris.size()) {
+                    setPlaying(_curIndex);
+                    addItem(emitter, _uris.get(_curIndex));
+                }
+                if(_curIndex != _uris.size() - 1) {
+                    addItem(emitter, _uris.get(_curIndex + 1));
+                }
+                emitter.onComplete();
+            }).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
+        }
+    }
 
     @SuppressLint("CheckResult")
     @Inject
     Playlist(IPlayer player, ILoginPassMan lpman, ISmbUtils smbUtils){
+        _isPlaying = false;
         _stopped = true;
         _player = player;
         _lpman = lpman;
@@ -50,17 +78,36 @@ public class Playlist implements IPlaylist{
         _player.onNeedNext().subscribe(o -> onNeedNext());
     }
 
-    private Observable<Object> addItem(LocationData data){
-        _numAdded++;
-        return _smbUtils.getFileStream(data, _lpman.getLoginPass(data)).toObservable().
-                observeOn(Schedulers.io()).map(
-                strm -> _player.addEnd(data.getFileExt(), strm)
-        ).concatMap(Single::toObservable);
+    private void addItem(Emitter<Observable<Object>> emitter, LocationData data){
+        if(_isPlaying) {
+            _numAdded++;
+            emitter.onNext(
+                    _smbUtils.getFileStream(data, _lpman.getLoginPass(data)).toObservable().
+                            observeOn(Schedulers.io()).map(
+                            strm -> _player.addEnd(data.getFileExt(), strm)
+                    ).concatMap(Single::toObservable)
+            );
+        }
     }
 
-    private Observable<Object> removeFirst(){
-        _numAdded--;
-        return _player.removeFirst().toObservable();
+    private void removeFirst(Emitter<Observable<Object>> emitter){
+        if(_isPlaying) {
+            _numAdded--;
+            emitter.onNext(_player.removeFirst().toObservable());
+        }
+    }
+
+    private void clear(){
+        if(_isPlaying) {
+            _numAdded = 0;
+            _player.clear();
+        }
+    }
+
+    private void setPlaying(int index){
+        if(_isPlaying) {
+            _playingSubj.onNext(_uris.get(index).getLast());
+        }
     }
 
     private void onNeedNext(){
@@ -68,13 +115,13 @@ public class Playlist implements IPlaylist{
             _numTasks.incrementAndGet();
             _quantumSubj.onNext(Observable.<Observable<Object>>create(
                     emitter -> {
-                        emitter.onNext(removeFirst());
+                        removeFirst(emitter);
                         if (_curIndex != _uris.size() - 1) {
                             _curIndex++;
-                            _playingSubj.onNext(_uris.get(_curIndex).getLast());
+                            setPlaying(_curIndex);
                             if (_curIndex != _uris.size() - 1) {
                                 _numAdded++;
-                                emitter.onNext(addItem(_uris.get(_curIndex + 1)));
+                                addItem(emitter, _uris.get(_curIndex + 1));
                             }
                         } else {
                             _stopped = true;
@@ -98,9 +145,9 @@ public class Playlist implements IPlaylist{
                             _curIndex++;
                         }
                         _stopped = false;
-                        emitter.onNext(addItem(_uris.get(_curIndex)));
+                        addItem(emitter, _uris.get(_curIndex));
                     } else if(_numAdded != 2 && _curIndex != _uris.size() - 1){
-                        emitter.onNext(addItem(_uris.get(_curIndex + 1)));
+                        addItem(emitter, _uris.get(_curIndex + 1));
                     }
                     emitter.onComplete();
                 }
@@ -124,12 +171,11 @@ public class Playlist implements IPlaylist{
                 emitter -> {
                     if (_curIndex != _uris.size() - 1) {
                         _curIndex++;
-                        _playingSubj.onNext(_uris.get(_curIndex).getLast());
-                        _numAdded = 0;
-                        _player.clear();
-                        emitter.onNext(addItem(_uris.get(_curIndex)));
+                        setPlaying(_curIndex);
+                        clear();
+                        addItem(emitter, _uris.get(_curIndex));
                         if(_curIndex != _uris.size() - 1) {
-                            emitter.onNext(addItem(_uris.get(_curIndex + 1)));
+                            addItem(emitter, _uris.get(_curIndex + 1));
                         }
                     }
                     emitter.onComplete();
@@ -143,13 +189,12 @@ public class Playlist implements IPlaylist{
         _quantumSubj.onNext(Observable.<Observable<Object>>create(
                 emitter -> {
                     if(_curIndex != 0){
-                        _numAdded = 0;
-                        _player.clear();
+                        clear();
                         _curIndex--;
-                        _playingSubj.onNext(_uris.get(_curIndex).getLast());
-                        emitter.onNext(addItem(_uris.get(_curIndex)));
+                        setPlaying(_curIndex);
+                        addItem(emitter, _uris.get(_curIndex));
                         if(_curIndex != _uris.size() - 1) {
-                            emitter.onNext(addItem(_uris.get(_curIndex + 1)));
+                            addItem(emitter, _uris.get(_curIndex + 1));
                         }
                     }
                     emitter.onComplete();

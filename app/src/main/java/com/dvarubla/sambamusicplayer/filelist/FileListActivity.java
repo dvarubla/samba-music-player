@@ -168,6 +168,8 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
         super.onStop();
         _flingLeftSubj.onComplete();
         _flingRightSubj.onComplete();
+        _playClickedSubj.onComplete();
+        _stopClickedSubj.onComplete();
         ItemSingleton.getInstance(FileListComponent.class).getItem().getToastManActivity().clearActivity(this);
         if(!_needSave){
             ItemSingleton.getInstance(FileListComponent.class).removeItem();

@@ -94,4 +94,9 @@ public class FileListModel implements IFileListModel {
     public Observable<String> onFilePlaying() {
         return _playlist.onFilePlaying();
     }
+
+    @Override
+    public void setPlaying(boolean playing) {
+        _playlist.setPlaying(playing);
+    }
 }

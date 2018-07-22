@@ -10,4 +10,5 @@ public interface IPlaylist {
     Observable<String> onFilePlaying();
     void playNext();
     void playPrev();
+    void setPlaying(boolean playing);
 }

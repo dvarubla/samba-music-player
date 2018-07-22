@@ -41,8 +41,14 @@ public class FileListPresenter implements IFileListPresenter {
     private void setViewListeners(IFileListView view){
         view.onFlingLeft().subscribe(o -> _model.setNext());
         view.onFlingRight().subscribe(o -> _model.setPrevious());
-        view.onMusicPlay().subscribe(o -> view.setPlaying(true));
-        view.onMusicStop().subscribe(o -> view.setPlaying(false));
+        view.onMusicPlay().subscribe(o -> {
+            _model.setPlaying(true);
+            view.setPlaying(true);
+        });
+        view.onMusicStop().subscribe(o -> {
+            _model.setPlaying(false);
+            view.setPlaying(false);
+        });
     }
 
     @SuppressLint("CheckResult")
