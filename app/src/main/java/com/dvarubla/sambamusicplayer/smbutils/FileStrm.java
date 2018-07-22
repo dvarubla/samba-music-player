@@ -69,7 +69,9 @@ public class FileStrm implements IFileStrm{
     @Override
     public void close() {
         try {
-            _file.close();
+            if(_file != null) {
+                _file.close();
+            }
         } catch (SMBRuntimeException ignored){
         }
     }

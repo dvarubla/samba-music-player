@@ -30,29 +30,35 @@ public class Playlist implements IPlaylist{
     private int _curIndex;
     private boolean _stopped;
     private boolean _isPlaying;
+    private boolean _needClearWhenPlayed;
     private int _numAdded;
     private AtomicInteger _numTasks;
 
     @Override
     public void setPlaying(boolean playing) {
+        _numTasks.incrementAndGet();
         if(!playing){
             _quantumSubj.onNext(Observable.fromCallable(() -> {
-                clear();
+                _player.stop();
+                _needClearWhenPlayed = false;
                 _isPlaying = false;
                 return new Object();
-            }));
+            }).doFinally(() -> _numTasks.decrementAndGet()));
         } else {
-            _numTasks.incrementAndGet();
             _quantumSubj.onNext(Observable.<Observable<Object>>create(emitter -> {
-                clear();
                 _isPlaying = true;
+                if(_needClearWhenPlayed){
+                    clear();
+                }
                 if(_curIndex != _uris.size()) {
-                    setPlaying(_curIndex);
-                    addItem(emitter, _uris.get(_curIndex));
+                    if (_numAdded == 0) {
+                        addItem(emitter, _uris.get(_curIndex));
+                    }
+                    if (_numAdded != 2 && _curIndex != _uris.size() - 1) {
+                        addItem(emitter, _uris.get(_curIndex + 1));
+                    }
                 }
-                if(_curIndex != _uris.size() - 1) {
-                    addItem(emitter, _uris.get(_curIndex + 1));
-                }
+                _player.play();
                 emitter.onComplete();
             }).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
         }
@@ -62,6 +68,7 @@ public class Playlist implements IPlaylist{
     @Inject
     Playlist(IPlayer player, ILoginPassMan lpman, ISmbUtils smbUtils){
         _isPlaying = false;
+        _needClearWhenPlayed = false;
         _stopped = true;
         _player = player;
         _lpman = lpman;
@@ -170,6 +177,7 @@ public class Playlist implements IPlaylist{
         _quantumSubj.onNext(Observable.<Observable<Object>>create(
                 emitter -> {
                     if (_curIndex != _uris.size() - 1) {
+                        _needClearWhenPlayed = true;
                         _curIndex++;
                         setPlaying(_curIndex);
                         clear();
@@ -189,6 +197,7 @@ public class Playlist implements IPlaylist{
         _quantumSubj.onNext(Observable.<Observable<Object>>create(
                 emitter -> {
                     if(_curIndex != 0){
+                        _needClearWhenPlayed = true;
                         clear();
                         _curIndex--;
                         setPlaying(_curIndex);

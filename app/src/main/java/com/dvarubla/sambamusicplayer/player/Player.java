@@ -63,7 +63,7 @@ public class Player implements IPlayer {
         _player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
         _concatSrc = new ConcatenatingMediaSource();
         _player.prepare(_concatSrc);
-        _player.setPlayWhenReady(true);
+        _player.setPlayWhenReady(false);
         _firstStopHandled = false;
         com.google.android.exoplayer2.Player.EventListener eventListener = new com.google.android.exoplayer2.Player.DefaultEventListener() {
             @Override
@@ -127,6 +127,16 @@ public class Player implements IPlayer {
         }
     }
 
+    @Override
+    public void stop() {
+        _player.setPlayWhenReady(false);
+    }
+
+    @Override
+    public void play() {
+        _player.setPlayWhenReady(true);
+    }
+
     private void getMetadata(){
         TrackGroupArray trackGroups = _player.getCurrentTrackGroups();
         Metadata mdata = null;
@@ -174,7 +184,6 @@ public class Player implements IPlayer {
     public Single<Object> addEnd(String name, IFileStrm strm) {
         SingleSubject<Object> subj = SingleSubject.create();
         _concatSrc.addMediaSource(createMediaSource(name, strm), () -> {
-            _player.setPlayWhenReady(true);
             if(_concatSrc.getSize() == 1){
                 _player.seekTo(0, C.TIME_UNSET);
             }
@@ -202,11 +211,16 @@ public class Player implements IPlayer {
 
     @Override
     public void clear() {
-        _player.setPlayWhenReady(false);
+        boolean needStop = _player.getPlayWhenReady();
+        if(needStop) {
+            _player.setPlayWhenReady(false);
+        }
         _concatSrc = new ConcatenatingMediaSource();
         _firstStopHandled = false;
         _player.prepare(_concatSrc, true, true);
-        _player.setPlayWhenReady(true);
+        if(needStop) {
+            _player.setPlayWhenReady(true);
+        }
     }
 
     @Override
