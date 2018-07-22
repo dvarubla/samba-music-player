@@ -2,6 +2,7 @@ package com.dvarubla.sambamusicplayer.player;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.support.v4.media.MediaMetadataCompat;
@@ -29,6 +30,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.SingleSubject;
 
+import static android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 import static com.google.android.exoplayer2.Player.DISCONTINUITY_REASON_PERIOD_TRANSITION;
 import static com.google.android.exoplayer2.Player.STATE_ENDED;
 import static com.google.android.exoplayer2.Player.STATE_READY;
@@ -47,17 +49,27 @@ public class Player implements IPlayer {
 
     private MediaSessionCompat _mediaSession;
     private MediaControllerCompat _controller;
+    private AudioManager _audioManager;
 
     private ExoPlayer _player;
     private PublishSubject<Object> _needNextSubj;
+    private PublishSubject<Object> _onStopSubj;
     private ConcatenatingMediaSource _concatSrc;
     private boolean _firstStopHandled;
     private SongMData _songMData;
+
+    private AudioManager.OnAudioFocusChangeListener audioFocusChangeListener = focusChange -> {
+        if(focusChange != AudioManager.AUDIOFOCUS_GAIN){
+            _controller.getTransportControls().stop();
+            _onStopSubj.onNext(new Object());
+        }
+    };
 
     @Inject
     Player(Context context){
         _context = context;
         _needNextSubj = PublishSubject.create();
+        _onStopSubj = PublishSubject.create();
         DefaultTrackSelector trackSelector =
                 new DefaultTrackSelector();
         _player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
@@ -125,6 +137,8 @@ public class Player implements IPlayer {
             _controller = new MediaControllerCompat(_context, _mediaSession.getSessionToken());
         } catch (RemoteException ignored) {
         }
+
+        _audioManager = (AudioManager) _context.getSystemService(Context.AUDIO_SERVICE);
     }
 
     @Override
@@ -134,8 +148,15 @@ public class Player implements IPlayer {
     }
 
     @Override
-    public void play() {
-        _player.setPlayWhenReady(true);
+    public boolean play() {
+        if(_audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+                != AUDIOFOCUS_REQUEST_GRANTED
+        ){
+            return false;
+        } else {
+            _player.setPlayWhenReady(true);
+            return true;
+        }
     }
 
     private void getMetadata(){
@@ -222,6 +243,11 @@ public class Player implements IPlayer {
         if(needStop) {
             _player.setPlayWhenReady(true);
         }
+    }
+
+    @Override
+    public Observable<Object> onStop() {
+        return _onStopSubj;
     }
 
     @Override

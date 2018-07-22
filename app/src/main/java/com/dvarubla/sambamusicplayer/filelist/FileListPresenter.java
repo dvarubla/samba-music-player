@@ -42,12 +42,12 @@ public class FileListPresenter implements IFileListPresenter {
         view.onFlingLeft().subscribe(o -> _model.setNext());
         view.onFlingRight().subscribe(o -> _model.setPrevious());
         view.onMusicPlay().subscribe(o -> {
-            _model.setPlaying(true);
             view.setPlaying(true);
+            _model.setPlaying(true);
         });
         view.onMusicStop().subscribe(o -> {
-            _model.setPlaying(false);
             view.setPlaying(false);
+            _model.setPlaying(false);
         });
     }
 
@@ -81,6 +81,7 @@ public class FileListPresenter implements IFileListPresenter {
         setViewListeners(view);
         _model.onFileAdded().subscribe(str -> _toastMan.showFileAdded(str));
         _model.onFilePlaying().subscribe(str -> _toastMan.showFilePlaying(str));
+        _model.onPlaylistStop().subscribe(o -> view.setPlaying(false));
     }
 
     private Maybe<IFileOrFolderItem[]> getLoginAndPass(){

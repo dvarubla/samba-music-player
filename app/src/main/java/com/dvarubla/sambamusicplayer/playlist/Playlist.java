@@ -17,6 +17,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 public class Playlist implements IPlaylist{
     private IPlayer _player;
@@ -27,6 +28,7 @@ public class Playlist implements IPlaylist{
     private PublishSubject<Observable> _quantumSubj;
     private PublishSubject<String> _playingSubj;
     private PublishSubject<String> _addedSubj;
+    private Subject<Object> _onStopSubj;
     private int _curIndex;
     private boolean _stopped;
     private boolean _isPlaying;
@@ -46,19 +48,22 @@ public class Playlist implements IPlaylist{
             }).doFinally(() -> _numTasks.decrementAndGet()));
         } else {
             _quantumSubj.onNext(Observable.<Observable<Object>>create(emitter -> {
-                _isPlaying = true;
-                if(_needClearWhenPlayed){
-                    clear();
-                }
-                if(_curIndex != _uris.size()) {
-                    if (_numAdded == 0) {
-                        addItem(emitter, _uris.get(_curIndex));
+                if(_player.play()) {
+                    _isPlaying = true;
+                    if (_needClearWhenPlayed) {
+                        clear();
                     }
-                    if (_numAdded != 2 && _curIndex != _uris.size() - 1) {
-                        addItem(emitter, _uris.get(_curIndex + 1));
+                    if (_curIndex != _uris.size()) {
+                        if (_numAdded == 0) {
+                            addItem(emitter, _uris.get(_curIndex));
+                        }
+                        if (_numAdded != 2 && _curIndex != _uris.size() - 1) {
+                            addItem(emitter, _uris.get(_curIndex + 1));
+                        }
                     }
+                } else {
+                    _onStopSubj.onNext(new Object());
                 }
-                _player.play();
                 emitter.onComplete();
             }).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
         }
@@ -78,11 +83,16 @@ public class Playlist implements IPlaylist{
         _addedSubj = PublishSubject.create();
         _playingSubj = PublishSubject.create();
         _quantumSubj = PublishSubject.create();
+        _onStopSubj = PublishSubject.create().toSerialized();
         _numTasks = new AtomicInteger(0);
 
         _quantumSubj.concatMap(obs -> obs.observeOn(Schedulers.io())).subscribe();
 
         _player.onNeedNext().subscribe(o -> onNeedNext());
+        _player.onStop().subscribe(o -> {
+            setPlaying(false);
+            _onStopSubj.onNext(new Object());
+        });
     }
 
     private void addItem(Emitter<Observable<Object>> emitter, LocationData data){
@@ -209,5 +219,10 @@ public class Playlist implements IPlaylist{
                     emitter.onComplete();
                 }
         ).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
+    }
+
+    @Override
+    public Observable<Object> onStop() {
+        return _onStopSubj;
     }
 }

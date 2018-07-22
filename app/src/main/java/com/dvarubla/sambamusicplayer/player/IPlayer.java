@@ -2,6 +2,7 @@ package com.dvarubla.sambamusicplayer.player;
 
 import com.dvarubla.sambamusicplayer.smbutils.IFileStrm;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 
 public interface IPlayer {
@@ -10,7 +11,8 @@ public interface IPlayer {
     void clear();
     boolean isStopped();
     void stop();
-    void play();
+    boolean play();
     io.reactivex.Observable<Object> onNeedNext();
     void onExit();
+    Observable<Object> onStop();
 }

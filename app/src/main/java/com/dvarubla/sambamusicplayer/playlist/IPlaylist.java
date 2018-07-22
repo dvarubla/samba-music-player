@@ -11,4 +11,5 @@ public interface IPlaylist {
     void playNext();
     void playPrev();
     void setPlaying(boolean playing);
+    Observable<Object> onStop();
 }
