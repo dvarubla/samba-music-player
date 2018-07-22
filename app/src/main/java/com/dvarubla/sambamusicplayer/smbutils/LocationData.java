@@ -52,4 +52,14 @@ public class LocationData implements Cloneable{
                 ((LocationData) obj)._share.equals(_share) &&
                 ((LocationData) obj)._path.equals(_path);
     }
+
+    public String getFileExt(){
+        int i = _path.lastIndexOf('.');
+        return _path.substring(i+1);
+    }
+
+    public String getLast(){
+        int i = _path.lastIndexOf('/');
+        return _path.substring(i+1);
+    }
 }

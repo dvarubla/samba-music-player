@@ -54,7 +54,7 @@ public class Playlist implements IPlaylist{
         _numAdded++;
         return _smbUtils.getFileStream(data, _lpman.getLoginPass(data)).toObservable().
                 observeOn(Schedulers.io()).map(
-                strm -> _player.addEnd(getFileExt(data.getPath()), strm)
+                strm -> _player.addEnd(data.getFileExt(), strm)
         ).concatMap(Single::toObservable);
     }
 
@@ -71,7 +71,7 @@ public class Playlist implements IPlaylist{
                         emitter.onNext(removeFirst());
                         if (_curIndex != _uris.size() - 1) {
                             _curIndex++;
-                            _playingSubj.onNext(getFileName(_uris.get(_curIndex)));
+                            _playingSubj.onNext(_uris.get(_curIndex).getLast());
                             if (_curIndex != _uris.size() - 1) {
                                 _numAdded++;
                                 emitter.onNext(addItem(_uris.get(_curIndex + 1)));
@@ -90,7 +90,7 @@ public class Playlist implements IPlaylist{
         _quantumSubj.onNext(Observable.<Observable<Object>>create(
                 emitter -> {
                     _uris.add(uri);
-                    _addedSubj.onNext(getFileName(uri));
+                    _addedSubj.onNext(uri.getLast());
                     if(_stopped){
                         if(_uris.size() == 1){
                             _curIndex = 0;
@@ -124,7 +124,7 @@ public class Playlist implements IPlaylist{
                 emitter -> {
                     if (_curIndex != _uris.size() - 1) {
                         _curIndex++;
-                        _playingSubj.onNext(getFileName(_uris.get(_curIndex)));
+                        _playingSubj.onNext(_uris.get(_curIndex).getLast());
                         _numAdded = 0;
                         _player.clear();
                         emitter.onNext(addItem(_uris.get(_curIndex)));
@@ -146,7 +146,7 @@ public class Playlist implements IPlaylist{
                         _numAdded = 0;
                         _player.clear();
                         _curIndex--;
-                        _playingSubj.onNext(getFileName(_uris.get(_curIndex)));
+                        _playingSubj.onNext(_uris.get(_curIndex).getLast());
                         emitter.onNext(addItem(_uris.get(_curIndex)));
                         if(_curIndex != _uris.size() - 1) {
                             emitter.onNext(addItem(_uris.get(_curIndex + 1)));
@@ -155,15 +155,5 @@ public class Playlist implements IPlaylist{
                     emitter.onComplete();
                 }
         ).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
-    }
-
-    private String getFileExt(String fileName){
-        int i = fileName.lastIndexOf('.');
-        return fileName.substring(i+1);
-    }
-
-    private String getFileName(LocationData path){
-        int i = path.getPath().lastIndexOf('/');
-        return path.getPath().substring(i+1);
     }
 }

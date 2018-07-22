@@ -41,6 +41,8 @@ public class FileListPresenter implements IFileListPresenter {
     private void setViewListeners(IFileListView view){
         view.onFlingLeft().subscribe(o -> _model.setNext());
         view.onFlingRight().subscribe(o -> _model.setPrevious());
+        view.onMusicPlay().subscribe(o -> view.setPlaying(true));
+        view.onMusicStop().subscribe(o -> view.setPlaying(false));
     }
 
     @SuppressLint("CheckResult")
@@ -52,7 +54,14 @@ public class FileListPresenter implements IFileListPresenter {
         _model.setLocationData(_rootLocationData);
         Observable<IFileOrFolderItem[]> obs = _model.getFiles().switchIfEmpty(
                 getLoginAndPass().toObservable()
-        ).repeatWhen(completed -> completed.zipWith(_repeatSubj, (a, b) -> a));
+        ).repeatWhen(completed -> completed.zipWith(_repeatSubj, (a, b) -> a)).map(o -> {
+            if (_curLocationData.getLast().isEmpty()) {
+                _view.setTitle(_curLocationData.getShare());
+            } else {
+                _view.setTitle(_curLocationData.getLast());
+            }
+            return o;
+        });
         _fileListCtrl.setItemsObs(obs);
 
         _fileListCtrl.itemClicked().subscribe(item -> {

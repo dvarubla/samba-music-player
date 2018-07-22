@@ -18,7 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:theme="@style/AppThemeNoTitle" android:name=".filelist.FileListActivity" />
+        <activity android:theme="@style/AppTheme" android:name=".filelist.FileListActivity" />
         <activity android:name=".simplepreferences.PreferencesActivity" />
         <service
             android:name="com.dvarubla.sambamusicplayer.ExitService"

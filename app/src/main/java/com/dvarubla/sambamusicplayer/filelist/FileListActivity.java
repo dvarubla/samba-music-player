@@ -5,12 +5,16 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.view.GestureDetectorCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
@@ -77,6 +81,9 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
 
     private PublishSubject<Object> _flingLeftSubj;
     private PublishSubject<Object> _flingRightSubj;
+    private PublishSubject<Object> _stopClickedSubj;
+    private PublishSubject<Object> _playClickedSubj;
+    private boolean _isPlaying;
 
     private boolean _needSave;
     @Inject
@@ -94,6 +101,9 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
     protected void onStart() {
         _flingLeftSubj = PublishSubject.create();
         _flingRightSubj = PublishSubject.create();
+        _stopClickedSubj = PublishSubject.create();
+        _playClickedSubj = PublishSubject.create();
+        _isPlaying = false;
         _needSave = false;
         ItemSingleton<FileListComponent> s = ItemSingleton.getInstance(FileListComponent.class);
         FileListComponent comp;
@@ -156,6 +166,8 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
     @Override
     public void onStop(){
         super.onStop();
+        _flingLeftSubj.onComplete();
+        _flingRightSubj.onComplete();
         ItemSingleton.getInstance(FileListComponent.class).getItem().getToastManActivity().clearActivity(this);
         if(!_needSave){
             ItemSingleton.getInstance(FileListComponent.class).removeItem();
@@ -203,5 +215,52 @@ public class FileListActivity extends AppCompatActivity implements IFileListView
     @Override
     public Observable<Object> onFlingRight() {
         return _flingRightSubj;
+    }
+
+    @Override
+    public Observable<Object> onMusicStop() {
+        return _stopClickedSubj;
+    }
+
+    @Override
+    public Observable<Object> onMusicPlay() {
+        return _playClickedSubj;
+    }
+
+    @Override
+    public void setTitle(String title) {
+        Observable.fromCallable( () -> {
+            ActionBar bar = getSupportActionBar();
+            if (bar != null) {
+                bar.setTitle(title);
+            }
+            return new Object();
+        }).subscribeOn(AndroidSchedulers.mainThread()).subscribe();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        if(_isPlaying) {
+            inflater.inflate(R.menu.stop_button, menu);
+        } else {
+            inflater.inflate(R.menu.play_button, menu);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.play: _playClickedSubj.onNext(new Object()); break;
+            case R.id.stop: _stopClickedSubj.onNext(new Object()); break;
+        }
+        return true;
+    }
+
+    @Override
+    public void setPlaying(boolean playing) {
+        _isPlaying = playing;
+        invalidateOptionsMenu();
     }
 }

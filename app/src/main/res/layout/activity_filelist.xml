@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:theme="@style/AppThemeNoTitle"
+    android:theme="@style/AppTheme"
     tools:context=".filelist.FileListActivity"
     android:id="@+id/filelist_layout">
     <android.support.v7.widget.RecyclerView
