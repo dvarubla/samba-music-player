@@ -8,6 +8,7 @@ import com.dvarubla.sambamusicplayer.smbutils.ISmbUtils;
 import com.dvarubla.sambamusicplayer.smbutils.LocationData;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
@@ -31,10 +32,15 @@ public class Playlist implements IPlaylist{
     private Subject<Object> _onStopSubj;
     private int _curIndex;
     private boolean _stopped;
-    private boolean _isPlaying;
+    private AtomicBoolean _isPlaying;
     private boolean _needClearWhenPlayed;
     private int _numAdded;
     private AtomicInteger _numTasks;
+
+    @Override
+    public boolean isPlaying() {
+        return _isPlaying.get();
+    }
 
     @Override
     public void setPlaying(boolean playing) {
@@ -43,13 +49,13 @@ public class Playlist implements IPlaylist{
             _player.stop();
             _quantumSubj.onNext(Observable.fromCallable(() -> {
                 _needClearWhenPlayed = false;
-                _isPlaying = false;
+                _isPlaying.set(false);
                 return new Object();
             }).doFinally(() -> _numTasks.decrementAndGet()));
         } else {
             _quantumSubj.onNext(Observable.<Observable<Object>>create(emitter -> {
                 if(_player.play()) {
-                    _isPlaying = true;
+                    _isPlaying.set(true);
                     if (_needClearWhenPlayed) {
                         clear();
                     }
@@ -72,7 +78,8 @@ public class Playlist implements IPlaylist{
     @SuppressLint("CheckResult")
     @Inject
     Playlist(IPlayer player, ILoginPassMan lpman, ISmbUtils smbUtils){
-        _isPlaying = false;
+        _isPlaying = new AtomicBoolean();
+        _isPlaying.set(false);
         _needClearWhenPlayed = false;
         _stopped = true;
         _player = player;
@@ -96,7 +103,7 @@ public class Playlist implements IPlaylist{
     }
 
     private void addItem(Emitter<Observable<Object>> emitter, LocationData data){
-        if(_isPlaying) {
+        if(_isPlaying.get()) {
             _numAdded++;
             emitter.onNext(
                     _smbUtils.getFileStream(data, _lpman.getLoginPass(data)).toObservable().
@@ -108,21 +115,21 @@ public class Playlist implements IPlaylist{
     }
 
     private void removeFirst(Emitter<Observable<Object>> emitter){
-        if(_isPlaying) {
+        if(_isPlaying.get()) {
             _numAdded--;
             emitter.onNext(_player.removeFirst().toObservable());
         }
     }
 
     private void clear(){
-        if(_isPlaying) {
+        if(_isPlaying.get()) {
             _numAdded = 0;
             _player.clear();
         }
     }
 
     private void setPlaying(int index){
-        if(_isPlaying) {
+        if(_isPlaying.get()) {
             _playingSubj.onNext(_uris.get(index).getLast());
         }
     }

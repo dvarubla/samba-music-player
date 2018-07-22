@@ -34,6 +34,7 @@ public class FileListPresenter implements IFileListPresenter {
     public void setView(final IFileListView view) {
         _view = view;
         _repeatSubj.onNext(new Object());
+        _view.setPlaying(_model.isPlaying());
         setViewListeners(view);
     }
 

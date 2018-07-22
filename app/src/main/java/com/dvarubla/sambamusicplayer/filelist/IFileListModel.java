@@ -19,4 +19,5 @@ public interface IFileListModel {
     Observable<String> onFileAdded();
     Observable<String> onFilePlaying();
     Observable<Object> onPlaylistStop();
+    boolean isPlaying();
 }

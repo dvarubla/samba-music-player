@@ -104,4 +104,9 @@ public class FileListModel implements IFileListModel {
     public Observable<Object> onPlaylistStop() {
         return _playlist.onStop();
     }
+
+    @Override
+    public boolean isPlaying() {
+        return _playlist.isPlaying();
+    }
 }
