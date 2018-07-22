@@ -74,6 +74,7 @@ public class Player implements IPlayer {
                     } else {
                         _firstStopHandled = true;
                     }
+                    _controller.getTransportControls().stop();
                 } else if(playbackState == STATE_READY){
                     getMetadata();
                     _controller.getTransportControls().play();
