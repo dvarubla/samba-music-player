@@ -80,6 +80,7 @@ public class FileListPresenter implements IFileListPresenter {
             }
         });
         setViewListeners(view);
+        _view.setPlaying(_model.isPlaying());
         _model.onFileAdded().subscribe(str -> _toastMan.showFileAdded(str));
         _model.onFilePlaying().subscribe(str -> _toastMan.showFilePlaying(str));
         _model.onPlaylistStop().subscribe(o -> view.setPlaying(false));
