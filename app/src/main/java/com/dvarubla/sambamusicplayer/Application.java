@@ -26,7 +26,7 @@ public class Application extends android.support.multidex.MultiDexApplication {
         }
         PowerManager mgr = (PowerManager)this.getSystemService(Context.POWER_SERVICE);
         if (mgr != null) {
-            _wakeLock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP , "Samba music player lock");
+            _wakeLock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Samba music player lock");
             _wakeLock.acquire();
         }
         _settingsComp = DaggerApplicationComponent.builder().setContext(getApplicationContext()).build();
