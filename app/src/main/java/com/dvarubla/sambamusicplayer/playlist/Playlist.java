@@ -9,7 +9,6 @@ import com.dvarubla.sambamusicplayer.smbutils.LocationData;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
 
@@ -36,7 +35,6 @@ public class Playlist implements IPlaylist{
     private AtomicBoolean _isPlaying;
     private boolean _needClearWhenPlayed;
     private int _numAdded;
-    private AtomicInteger _numTasks;
 
     @Override
     public boolean isPlaying() {
@@ -45,14 +43,13 @@ public class Playlist implements IPlaylist{
 
     @Override
     public void setPlaying(boolean playing) {
-        _numTasks.incrementAndGet();
         if(!playing){
             _player.stop();
             _quantumSubj.onNext(Observable.fromCallable(() -> {
                 _needClearWhenPlayed = false;
                 _isPlaying.set(false);
                 return new Object();
-            }).doFinally(() -> _numTasks.decrementAndGet()));
+            }));
         } else {
             _quantumSubj.onNext(Observable.<Observable<Object>>create(emitter -> {
                 if(_player.canPlay()) {
@@ -68,12 +65,15 @@ public class Playlist implements IPlaylist{
                             addItem(emitter, _uris.get(_curIndex + 1));
                         }
                     }
-                    _player.play();
+                    emitter.onNext(Observable.create(em -> {
+                        _player.play();
+                        em.onComplete();
+                    }));
                 } else {
                     _onStopSubj.onNext(new Object());
                 }
                 emitter.onComplete();
-            }).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
+            }).concatMap(o -> o));
         }
     }
 
@@ -94,7 +94,6 @@ public class Playlist implements IPlaylist{
         _quantumSubj = PublishSubject.create();
         _trackChangedSubj = PublishSubject.create();
         _onStopSubj = PublishSubject.create().toSerialized();
-        _numTasks = new AtomicInteger(0);
 
         _quantumSubj.concatMap(obs -> obs.observeOn(Schedulers.io())).subscribe();
 
@@ -140,25 +139,23 @@ public class Playlist implements IPlaylist{
     }
 
     private void onNeedNext(){
-        if(_numTasks.get() == 0) {
-            _numTasks.incrementAndGet();
-            _quantumSubj.onNext(Observable.<Observable<Object>>create(
-                    emitter -> {
+        _quantumSubj.onNext(Observable.<Observable<Object>>create(
+                emitter -> {
+                    if(_numAdded != 0) {
                         removeFirst(emitter);
                         if (_curIndex != _uris.size() - 1) {
                             _curIndex++;
                             setCurrent(_curIndex);
                             if (_curIndex != _uris.size() - 1) {
-                                _numAdded++;
                                 addItem(emitter, _uris.get(_curIndex + 1));
                             }
                         } else {
                             _stopped = true;
                         }
-                        emitter.onComplete();
                     }
-            ).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
-        }
+                    emitter.onComplete();
+                }
+        ).concatMap(o -> o));
     }
 
     @Override
@@ -200,7 +197,6 @@ public class Playlist implements IPlaylist{
 
     @Override
     public void playNext() {
-        _numTasks.incrementAndGet();
         _quantumSubj.onNext(Observable.<Observable<Object>>create(
                 emitter -> {
                     if (_curIndex != _uris.size() - 1) {
@@ -215,12 +211,11 @@ public class Playlist implements IPlaylist{
                     }
                     emitter.onComplete();
                 }
-        ).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
+        ).concatMap(o -> o));
     }
 
     @Override
     public void playPrev() {
-        _numTasks.incrementAndGet();
         _quantumSubj.onNext(Observable.<Observable<Object>>create(
                 emitter -> {
                     if(_curIndex != 0){
@@ -235,7 +230,7 @@ public class Playlist implements IPlaylist{
                     }
                     emitter.onComplete();
                 }
-        ).concatMap(o -> o).doFinally(() -> _numTasks.decrementAndGet()));
+        ).concatMap(o -> o));
     }
 
     @Override
