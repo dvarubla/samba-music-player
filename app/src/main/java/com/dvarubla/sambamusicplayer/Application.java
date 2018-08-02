@@ -8,6 +8,8 @@ import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.WindowManager;
 
+import com.dvarubla.sambamusicplayer.player.PlayerService;
+
 public class Application extends android.support.multidex.MultiDexApplication {
     private static ApplicationComponent _settingsComp;
     @SuppressWarnings("FieldCanBeLocal")
@@ -31,6 +33,7 @@ public class Application extends android.support.multidex.MultiDexApplication {
         }
         _settingsComp = DaggerApplicationComponent.builder().setContext(getApplicationContext()).build();
         startService(new Intent(getApplicationContext(), ExitService.class));
+        startService(new Intent(getApplicationContext(), PlayerService.class));
     }
 
     static void onExit(){

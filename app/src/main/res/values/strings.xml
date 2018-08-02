@@ -8,4 +8,5 @@
     <string name="file_is_playing">%1$s is playing</string>
     <string name="file_is_current">%1$s is current</string>
     <string name="enter_server_login_pass">Enter %1$s login and password:</string>
+    <string name="playing_music">Playing music</string>
 </resources>

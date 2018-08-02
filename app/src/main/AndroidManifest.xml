@@ -23,6 +23,7 @@
         <service
             android:name="com.dvarubla.sambamusicplayer.ExitService"
             android:stopWithTask="false" />
+        <service android:name=".player.PlayerService" />
     </application>
 
 </manifest>
