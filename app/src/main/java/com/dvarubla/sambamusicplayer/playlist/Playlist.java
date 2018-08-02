@@ -48,6 +48,7 @@ public class Playlist implements IPlaylist{
             _quantumSubj.onNext(Observable.fromCallable(() -> {
                 _needClearWhenPlayed = false;
                 _isPlaying.set(false);
+                _player.stopService();
                 return new Object();
             }));
         } else {
@@ -58,6 +59,7 @@ public class Playlist implements IPlaylist{
                         clear();
                     }
                     if (_curIndex != _uris.size()) {
+                        _player.startService();
                         if (_numAdded == 0) {
                             addItem(emitter, _uris.get(_curIndex));
                         }
@@ -150,6 +152,7 @@ public class Playlist implements IPlaylist{
                                 addItem(emitter, _uris.get(_curIndex + 1));
                             }
                         } else {
+                            _player.stopService();
                             _stopped = true;
                         }
                     }
@@ -165,6 +168,7 @@ public class Playlist implements IPlaylist{
                     _uris.add(uri);
                     _addedSubj.onNext(uri.getLast());
                     if(_stopped){
+                        _player.startService();
                         if(_uris.size() == 1){
                             _curIndex = 0;
                         } else {

@@ -187,6 +187,16 @@ public class Player implements IPlayer {
     }
 
     @Override
+    public void stopService() {
+        _context.stopService(new Intent(_context, PlayerService.class));
+    }
+
+    @Override
+    public void startService() {
+        _context.startService(new Intent(_context, PlayerService.class));
+    }
+
+    @Override
     public boolean canPlay() {
         return _audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
                 == AUDIOFOCUS_REQUEST_GRANTED;
@@ -233,6 +243,8 @@ public class Player implements IPlayer {
                 long dur = _player.getDuration();
                 _songMData = new SongMData(artist, trackName, album, dur);
             }
+        } else {
+            _songMData = null;
         }
     }
 
@@ -294,6 +306,7 @@ public class Player implements IPlayer {
 
     @Override
     public void onExit() {
+        stopService();
         _controller.getTransportControls().stop();
     }
 }
