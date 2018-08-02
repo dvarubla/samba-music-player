@@ -125,12 +125,15 @@ public class Playlist implements IPlaylist{
         }
     }
 
-    @Override
-    public void clear(){
+    private void clear(){
         if(_isPlaying.get()) {
-            _numAdded = 0;
-            _player.clear();
+            doClear();
         }
+    }
+
+    private void doClear(){
+        _numAdded = 0;
+        _player.clear();
     }
 
     private void setCurrent(int index){
@@ -241,5 +244,15 @@ public class Playlist implements IPlaylist{
     @Override
     public Observable<Object> onStop() {
         return _onStopSubj;
+    }
+
+    @Override
+    public void onExit() {
+        _quantumSubj.onNext(Observable.fromCallable(() -> {
+            doClear();
+            _uris.clear();
+            setPlaying(false);
+            return new Object();
+        }));
     }
 }

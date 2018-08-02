@@ -11,8 +11,8 @@ public interface IPlaylist {
     Observable<String> onTrackChanged();
     void playNext();
     void playPrev();
-    void clear();
     void setPlaying(boolean playing);
     Observable<Object> onStop();
+    void onExit();
     boolean isPlaying();
 }

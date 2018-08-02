@@ -15,6 +15,5 @@ public interface IPlayer {
     boolean canPlay();
     void play();
     io.reactivex.Observable<Object> onNeedNext();
-    void onExit();
     Observable<Object> onStop();
 }

@@ -303,11 +303,4 @@ public class Player implements IPlayer {
     public Observable<Object> onStop() {
         return _onStopSubj;
     }
-
-    @Override
-    public void onExit() {
-        stopService();
-        stop();
-        _controller.getTransportControls().stop();
-    }
 }
