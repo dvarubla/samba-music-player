@@ -307,6 +307,7 @@ public class Player implements IPlayer {
     @Override
     public void onExit() {
         stopService();
+        stop();
         _controller.getTransportControls().stop();
     }
 }

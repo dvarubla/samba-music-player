@@ -17,6 +17,11 @@ public class ItemSingleton<T>{
             return instance;
         }
     }
+
+    public static void clear(){
+        instMap.clear();
+    }
+
     public void setItem(T item){
         this.item = item;
     }
