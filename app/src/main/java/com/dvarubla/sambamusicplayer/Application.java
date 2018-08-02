@@ -16,6 +16,7 @@ public class Application extends android.support.multidex.MultiDexApplication {
 
     static void onExit(){
         ItemSingleton.clear();
+        _settingsComp.getPlaylist().clear();
         _settingsComp.getPlayer().onExit();
     }
 

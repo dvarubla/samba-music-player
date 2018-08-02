@@ -125,7 +125,8 @@ public class Playlist implements IPlaylist{
         }
     }
 
-    private void clear(){
+    @Override
+    public void clear(){
         if(_isPlaying.get()) {
             _numAdded = 0;
             _player.clear();
