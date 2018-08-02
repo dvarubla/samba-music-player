@@ -50,6 +50,7 @@ public class FileListPresenterClickT {
         when(_view.onMusicPlay()).thenReturn(Observable.empty());
         when(_view.onMusicStop()).thenReturn(Observable.empty());
         when(_model.onPlaylistStop()).thenReturn(Observable.empty());
+        when(_model.onTrackChanged()).thenReturn(Observable.empty());
         _presenter.init(_view, "TEST/test/dir");
     }
 
